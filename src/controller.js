@@ -1,37 +1,31 @@
 const {spawn} = require('child_process')
 const {dirname} = require('path')
 const EventEmitter = require('events')
-const split = require('argv-split')
-
-const Command = require('./command')
-const gtp = require('./index')
+const {Command, Response} = require('./main')
 
 class Controller extends EventEmitter {
-    constructor(engine) {
+    constructor(path, args = []) {
         super()
 
+        this._counter = 0
         this._outBuffer = ''
         this._errBuffer = ''
 
         this.commands = []
-        this.error = false
         this.process = null
-        this.engine = engine
+        this.path = path
+        this.args = args
     }
 
     start() {
-        if (this.process) return
+        if (this.process != null) return
 
-        let {path, args, commands = ''} = this.engine
+        let {path, args} = this.engine
 
-        this.process = spawn(path, split(args), {cwd: dirname(path)})
-
-        this.process.on('error', () => {
-            this.error = true
-        })
+        this.process = spawn(path, args, {cwd: dirname(path)})
 
         this.process.on('exit', signal => {
-            this.emit('quit', signal)
+            this.emit('quit', {signal})
         })
 
         this.process.stdout.on('data', data => {
@@ -40,12 +34,12 @@ class Controller extends EventEmitter {
             let start = this._outBuffer.indexOf('\n\n')
 
             while (start !== -1) {
-                let response = gtp.parseResponse(this._outBuffer.slice(0, start))
+                let response = Response.fromString(this._outBuffer.slice(0, start))
                 this._outBuffer = this._outBuffer.slice(start + 2)
 
                 if (this.commands.length > 0) {
                     let command = this.commands.shift()
-                    this.emit(`response-${command.internalId}`, response)
+                    this.emit(`response-${command._internalId}`, response)
                 }
 
                 start = this._outBuffer.indexOf('\n\n')
@@ -65,27 +59,24 @@ class Controller extends EventEmitter {
             }
         })
 
-        let initialCommands = commands.split(';')
-            .map(x => x.trim()).filter(x => x !== '').map(x => new gtp.Command(null, x))
-
-        for (let command of initialCommands) {
-            this.sendCommand(command)
-        }
+        this.emit('started')
     }
 
-    stop(timeout) {
+    stop(timeout = 3000) {
         return new Promise(resolve => {
             setTimeout(() => {
                 this.kill()
                 resolve()
             }, timeout)
 
-            this.sendCommand(new Command(null, 'quit'))
+            this.sendCommand(Command.fromString('quit'))
             .then(response => response.error ? Promise.reject(new Error(response.content)) : response)
             .then(() => this.process = null)
             .catch(err => this.kill())
             .then(resolve)
-        })
+        }).then(() =>
+            this.emit('stopped')
+        )
     }
 
     kill() {
@@ -93,20 +84,25 @@ class Controller extends EventEmitter {
 
         this.process.kill()
         this.process = null
+
+        this.emit('killed')
     }
 
     sendCommand(command) {
+        let _internalId = ++this._counter
+
         let promise = new Promise(resolve => {
             if (this.process == null) this.start()
 
-            this.once(`response-${command.internalId}`, resolve)
+            let eventName = `response-${_internalId}`
+            this.once(eventName, resolve)
 
             try {
-                this.process.stdin.write(command.toString() + '\n')
-                this.commands.push(command)
+                this.process.stdin.write(Command.toString(command) + '\n')
+                this.commands.push(Object.assign({_internalId}, command))
             } catch (err) {
-                let response = new gtp.Response(command.id, 'connection error', true, true)
-                this.emit(`response-${command.internalId}`, response)
+                this.removeListener(eventName, resolve)
+                reject(new Error('GTP engine connection error'))
             }
         })
 
