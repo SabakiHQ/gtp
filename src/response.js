@@ -1,5 +1,3 @@
-const helper = require('../helper')
-
 class Response {
     constructor(id, content, error, internal) {
         this.id = id

@@ -1,8 +1,12 @@
-const helper = require('../helper')
+let counter = 0
+
+function getId() {
+    return ++counter
+}
 
 class Command {
     constructor(id, name, ...args) {
-        this.internalId = helper.getId()
+        this.internalId = getId()
         this.id = id
         this.name = name
         this.arguments = args || []

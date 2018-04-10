@@ -5,7 +5,6 @@ const split = require('argv-split')
 
 const Command = require('./command')
 const gtp = require('./index')
-const helper = require('../helper')
 
 class Controller extends EventEmitter {
     constructor(engine) {
