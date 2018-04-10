@@ -1,11 +1,14 @@
 const {spawn} = require('child_process')
-const {dirname} = require('path')
 const EventEmitter = require('events')
+const {dirname} = require('path')
 const {Command, Response} = require('./main')
 
 class Controller extends EventEmitter {
     constructor(path, args = []) {
         super()
+
+        this.path = path
+        this.args = args
 
         this._counter = 0
         this._outBuffer = ''
@@ -13,8 +16,6 @@ class Controller extends EventEmitter {
 
         this.commands = []
         this.process = null
-        this.path = path
-        this.args = args
     }
 
     start() {
@@ -23,7 +24,13 @@ class Controller extends EventEmitter {
         this.process = spawn(this.path, this.args, {cwd: dirname(this.path)})
 
         this.process.on('exit', signal => {
+            this._counter = 0
+            this._outBuffer = ''
+            this._errBuffer = ''
+
+            this.commands = []
             this.process = null
+
             this.emit('quit', {signal})
         })
 
@@ -61,7 +68,9 @@ class Controller extends EventEmitter {
         this.emit('started')
     }
 
-    stop(timeout = 3000) {
+    async stop(timeout = 3000) {
+        if (this.process == null) return
+
         return new Promise(resolve => {
             setTimeout(() => {
                 this.kill()
@@ -84,7 +93,7 @@ class Controller extends EventEmitter {
         this.emit('killed')
     }
 
-    sendCommand(command) {
+    async sendCommand(command) {
         let _internalId = ++this._counter
 
         let promise = new Promise((resolve, reject) => {
