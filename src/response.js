@@ -1,14 +1,16 @@
-class Response {
-    constructor(id, content, error, internal) {
-        this.id = id
-        this.content = content
-        this.error = !!error
-        this.internal = !!internal
-    }
+exports.fromString = function(input) {
+    input = input.replace(/\t/g, ' ').trim()
 
-    toString() {
-        return `${this.internal ? '' : this.error ? '?' : '='}${this.id != null ? this.id : ''} ${this.content}`.trim()
-    }
+    let error = input[0] !== '='
+    let hasId = input.length >= 2 && input[1] !== ' '
+
+    input = input.slice(1)
+    let id = hasId ? +input.split(' ')[0] : null
+
+    if (hasId) input = input.slice((id + '').length)
+    return {id, content: input.trim(), error}
 }
 
-module.exports = Response
+exports.toString = function({id = null, content, error = false}) {
+    return `${error ? '?' : '='}${id != null ? id : ''} ${content}`.trim()
+}

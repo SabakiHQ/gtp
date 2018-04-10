@@ -16,32 +16,3 @@ if (process.platform === 'darwin') {
             .find(x => x[0] === 'PATH')[1]
     })
 }
-
-exports.parseCommand = function(input) {
-    input = input.replace(/\t/g, ' ').replace(/#.*?$/, '').trim()
-
-    let inputs = input.split(/\s+/).filter(x => x !== '')
-    let id = parseFloat(inputs[0])
-
-    if (!isNaN(id) && id + '' === inputs[0]) inputs.shift()
-    else id = null
-
-    let name = inputs[0]
-    inputs.shift()
-
-    return new Command(id, name, ...inputs)
-}
-
-exports.parseResponse = function(input) {
-    input = input.replace(/\t/g, ' ').trim()
-
-    let error = input[0] !== '='
-    let hasId = input.length >= 2 && input[1] !== ' '
-
-    input = input.slice(1)
-    let id = hasId ? +input.split(' ')[0] : null
-
-    if (hasId) input = input.slice((id + '').length)
-
-    return new Response(id, input.slice(1), error)
-}

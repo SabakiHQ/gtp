@@ -1,20 +1,16 @@
-let counter = 0
+exports.fromString = function(input) {
+    input = input.replace(/\t/g, ' ').replace(/#.*?$/, '').trim()
 
-function getId() {
-    return ++counter
+    let inputs = input.split(/\s+/)
+    let id = parseInt(inputs[0], 10)
+
+    if (!isNaN(id) && id + '' === inputs[0]) inputs.shift()
+    else id = null
+
+    let [name, ...args] = inputs
+    return {id, name, args}
 }
 
-class Command {
-    constructor(id, name, ...args) {
-        this.internalId = getId()
-        this.id = id
-        this.name = name
-        this.arguments = args || []
-    }
-
-    toString() {
-        return `${this.id != null ? this.id : ''} ${this.name} ${this.arguments.join(' ')}`.trim()
-    }
+exports.toString = function({id = null, name, args = []}) {
+    return `${id != null ? id : ''} ${name} ${args.join(' ')}`.trim()
 }
-
-module.exports = Command
