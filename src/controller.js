@@ -38,8 +38,8 @@ class Controller extends EventEmitter {
                 this._outBuffer = this._outBuffer.slice(start + 2)
 
                 if (this.commands.length > 0) {
-                    let command = this.commands.shift()
-                    this.emit(`response-${command._internalId}`, response)
+                    let {_internalId} = this.commands.shift()
+                    this.emit(`response-${_internalId}`, response)
                 }
 
                 start = this._outBuffer.indexOf('\n\n')
@@ -91,7 +91,7 @@ class Controller extends EventEmitter {
     sendCommand(command) {
         let _internalId = ++this._counter
 
-        let promise = new Promise(resolve => {
+        let promise = new Promise((resolve, reject) => {
             if (this.process == null) this.start()
 
             let eventName = `response-${_internalId}`
@@ -107,7 +107,6 @@ class Controller extends EventEmitter {
         })
 
         this.emit('command-sent', {
-            controller: this,
             command,
             getResponse: () => promise
         })
