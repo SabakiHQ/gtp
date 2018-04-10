@@ -94,8 +94,8 @@ class Controller extends EventEmitter {
             this.once(eventName, resolve)
 
             try {
-                this.process.stdin.write(Command.toString(command) + '\n')
                 this.commands.push(Object.assign({_internalId}, command))
+                this.process.stdin.write(Command.toString(command) + '\n')
             } catch (err) {
                 this.removeListener(eventName, resolve)
                 reject(new Error('GTP engine connection error'))
