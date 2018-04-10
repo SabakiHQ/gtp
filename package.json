@@ -24,7 +24,7 @@
   "bugs": {
     "url": "https://github.com/SabakiHQ/gtp/issues"
   },
-  "homepage": "https://github.com/SabakiHQ/gtp#readme",
+  "homepage": "https://github.com/SabakiHQ/gtp",
   "devDependencies": {
     "tap": "^11.1.3"
   }
