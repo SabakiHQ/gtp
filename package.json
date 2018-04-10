@@ -1,0 +1,31 @@
+{
+  "name": "@sabaki/gtp",
+  "version": "1.0.0",
+  "description": "A Node.js module for handling GTP engines.",
+  "main": "./src/main.js",
+  "scripts": {
+    "test": "tap tests/*.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SabakiHQ/gtp.git"
+  },
+  "keywords": [
+    "gtp",
+    "go",
+    "weiqi",
+    "baduk",
+    "engine",
+    "boardgame",
+    "ai"
+  ],
+  "author": "Yichuan Shen",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SabakiHQ/gtp/issues"
+  },
+  "homepage": "https://github.com/SabakiHQ/gtp#readme",
+  "devDependencies": {
+    "tap": "^11.1.3"
+  }
+}
