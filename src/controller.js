@@ -20,11 +20,10 @@ class Controller extends EventEmitter {
     start() {
         if (this.process != null) return
 
-        let {path, args} = this.engine
-
-        this.process = spawn(path, args, {cwd: dirname(path)})
+        this.process = spawn(this.path, this.args, {cwd: dirname(this.path)})
 
         this.process.on('exit', signal => {
+            this.process = null
             this.emit('quit', {signal})
         })
 
@@ -71,7 +70,6 @@ class Controller extends EventEmitter {
 
             this.sendCommand(Command.fromString('quit'))
             .then(response => response.error ? Promise.reject(new Error(response.content)) : response)
-            .then(() => this.process = null)
             .catch(err => this.kill())
             .then(resolve)
         }).then(() =>
@@ -83,8 +81,6 @@ class Controller extends EventEmitter {
         if (!this.process) return
 
         this.process.kill()
-        this.process = null
-
         this.emit('killed')
     }
 
