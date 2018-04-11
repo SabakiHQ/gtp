@@ -69,39 +69,46 @@ Returns a GTP response string represented by `response`, something that an engin
 
 `Controller` extends [`EventEmitter`](https://nodejs.org/api/events.html).
 
-#### Constructor
-##### `new Controller(path[, args])`
-
-- `path` `<String>` - The path to an executable file, the GTP engine
-- `args` `<String[]>` *(optional)* - Additional arguments that are passed to the engine when started
-
-#### Members
+#### `new Controller(path[, args])`
 
 - `path` `<String>`
-- `args` `<String[]>`
-- `process` [`<ChildProcess>`](https://nodejs.org/api/child_process.html) | `null` - The GTP engine process
-- `commands` [`<Command[]>`](#command)  - The command queue
+- `args` `<String[]>` *(optional)*
 
-#### Events
-##### Event: `started`
+#### `controller.path`
+
+`<String>` - The path to an executable file, the GTP engine.
+
+#### `controller.args`
+
+`<String[]>` - Additional arguments that are passed to the engine when started.
+
+#### `controller.process`
+
+[`<ChildProcess>`](https://nodejs.org/api/child_process.html) | `null` - The GTP engine process.
+
+#### `controller.commands`
+
+[`<Command[]>`](#command) - The command queue.
+
+#### Event: `started`
 
 This event is emitted when the engine process starts.
 
-##### Event: `stopped`
+#### Event: `stopped`
 
 - `evt` `<Object>`
     - `signal` `<String>` - The signal by which the engine process was terminated.
 
 This event is emitted after the engine process ends.
 
-##### Event: `stderr`
+#### Event: `stderr`
 
 - `evt` `<Object>`
     - `content` `<String>`
 
 This event is emitted when the engine process finishes printing a line on stderr.
 
-##### Event: `command-sent`
+#### Event: `command-sent`
 
 - `evt` `<Object>`
     - `command` [`<Command>`](#command)
@@ -109,22 +116,21 @@ This event is emitted when the engine process finishes printing a line on stderr
 
 This event is emitted when a command is sent to the engine.
 
-#### Methods
-##### `start()`
+#### `controller.start()`
 
 Spawns a process of the engine if necessary.
 
-##### `async stop([timeout])`
+#### `async controller.stop([timeout])`
 
-- `timeout` `<Number>` *(optiona)* - Default: `3000`
+- `timeout` `<Number>` *(optional)* - Default: `3000`
 
 Sends a `quit` command to the engine. If engine doesn't respond, it will be killed after `timeout` ms.
 
-##### `kill()`
+#### `controller.kill()`
 
 Kills the engine process.
 
-##### `async sendCommand(command)`
+#### `async controller.sendCommand(command)`
 
 - `command` [`<Command>`](#command)
 
