@@ -31,7 +31,7 @@ class Controller extends EventEmitter {
             this.commands = []
             this.process = null
 
-            this.emit('quit', {signal})
+            this.emit('stopped', {signal})
         })
 
         this.process.stdout.on('data', data => {
@@ -81,16 +81,13 @@ class Controller extends EventEmitter {
             .then(response => response.error ? Promise.reject(new Error(response.content)) : response)
             .catch(err => this.kill())
             .then(resolve)
-        }).then(() =>
-            this.emit('stopped')
-        )
+        })
     }
 
     kill() {
         if (!this.process) return
 
         this.process.kill()
-        this.emit('killed')
     }
 
     async sendCommand(command) {
