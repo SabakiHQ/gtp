@@ -72,13 +72,14 @@ class Controller extends EventEmitter {
         if (this.process == null) return
 
         return new Promise(resolve => {
-            setTimeout(() => {
+            let timeoutId = setTimeout(() => {
                 this.kill()
                 resolve()
             }, timeout)
 
             this.sendCommand(Command.fromString('quit'))
             .then(response => response.error ? Promise.reject(new Error(response.content)) : response)
+            .then(() => clearTimeout(timeoutId))
             .catch(err => this.kill())
             .then(resolve)
         })
