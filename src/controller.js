@@ -1,6 +1,5 @@
 const {spawn} = require('child_process')
 const EventEmitter = require('events')
-const {dirname} = require('path')
 const {Command, Response} = require('./main')
 
 class Controller extends EventEmitter {
