@@ -4,11 +4,12 @@ const {dirname} = require('path')
 const {Command, Response} = require('./main')
 
 class Controller extends EventEmitter {
-    constructor(path, args = []) {
+    constructor(path, args = [], spawnOptions = {}) {
         super()
 
         this.path = path
         this.args = args
+        this.spawnOptions = spawnOptions
 
         this._counter = 0
         this._outBuffer = ''
@@ -21,7 +22,7 @@ class Controller extends EventEmitter {
     start() {
         if (this.process != null) return
 
-        this.process = spawn(this.path, this.args, {cwd: dirname(this.path)})
+        this.process = spawn(this.path, this.args, this.spawnOptions)
 
         this.process.on('exit', signal => {
             this._counter = 0

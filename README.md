@@ -69,26 +69,11 @@ Returns a GTP response string represented by `response`, something that an engin
 
 `Controller` extends [`EventEmitter`](https://nodejs.org/api/events.html).
 
-#### `new Controller(path[, args])`
+#### `new Controller(path[, args[, spawnOptions]])`
 
 - `path` `<String>`
 - `args` `<String[]>` *(optional)*
-
-#### `controller.path`
-
-`<String>` - The path to an executable file, the GTP engine.
-
-#### `controller.args`
-
-`<String[]>` - Additional arguments that are passed to the engine when started.
-
-#### `controller.process`
-
-[`<ChildProcess>`](https://nodejs.org/api/child_process.html) | `null` - The GTP engine process.
-
-#### `controller.commands`
-
-[`<Command[]>`](#command) - The command queue.
+- `spawnOptions` `<Object>` *(optional)* - See [Node.js documentation](https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options).
 
 #### Event: `started`
 
@@ -115,6 +100,26 @@ This event is emitted when the engine process finishes printing a line on stderr
     - `async getResponse()` [`<Response>`](#response)
 
 This event is emitted when a command is sent to the engine.
+
+#### `controller.path`
+
+`<String>` - The path to an executable file, the GTP engine.
+
+#### `controller.args`
+
+`<String[]>` - Additional arguments that are passed to the engine when started.
+
+#### `controller.spawnOptions`
+
+`<Object>` - See [Node.js documentation](https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options).
+
+#### `controller.process`
+
+[`<ChildProcess>`](https://nodejs.org/api/child_process.html) | `null` - The GTP engine process.
+
+#### `controller.commands`
+
+[`<Command[]>`](#command) - The command queue.
 
 #### `controller.start()`
 
