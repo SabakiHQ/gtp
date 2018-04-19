@@ -10,10 +10,23 @@ Use npm to install:
 $ npm install @sabaki/gtp
 ~~~
 
-Then require it as follows:
+## Usage
 
 ~~~js
 const {Controller, Command, Response} = require('@sabaki/gtp')
+
+async function main() {
+    let leela = new Controller('./path/to/leela', ['--gtp', '--noponder'])
+    leela.start()
+    
+    let {id, content, error} = await leela.sendCommand({name: 'genmove', args: ['B']})
+    if (error) throw new Error('Leela throwed an error!')
+    
+    console.log(content)
+    await leela.stop()
+}
+
+main()
 ~~~
 
 ## API
