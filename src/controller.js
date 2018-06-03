@@ -97,12 +97,17 @@ class Controller extends EventEmitter {
         let promise = new Promise((resolve, reject) => {
             if (this.process == null) this.start()
 
+            let commandString = Command.toString(command)
+            if (commandString.trim() === '') {
+                return resolve(Response.fromString(''))
+            }
+
             let eventName = `response-${_internalId}`
             this.once(eventName, resolve)
 
             try {
                 this.commands.push(Object.assign({_internalId}, command))
-                this.process.stdin.write(Command.toString(command) + '\n')
+                this.process.stdin.write(commandString + '\n')
             } catch (err) {
                 this.removeListener(eventName, resolve)
                 reject(new Error('GTP engine connection error'))
