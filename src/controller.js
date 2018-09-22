@@ -38,7 +38,7 @@ class Controller extends EventEmitter {
                 let end = line === ''
                 let {_internalId} = !end ? this.commands[0] : this.commands.shift()
 
-                this.emit(`response-${_internalId}`, {content: line, end})
+                this.emit(`response-${_internalId}`, {line, end})
             }
         })
 
@@ -72,7 +72,7 @@ class Controller extends EventEmitter {
         this.process.kill()
     }
 
-    async sendCommand(command) {
+    async sendCommand(command, subscriber = () => {}) {
         let _internalId = ++this._counter
 
         let promise = new Promise((resolve, reject) => {
@@ -84,14 +84,17 @@ class Controller extends EventEmitter {
             }
 
             let eventName = `response-${_internalId}`
-            let buffer = ''
+            let content = ''
 
-            this.on(eventName, ({content, end}) => {
-                buffer += content + '\n'
+            this.on(eventName, ({line, end}) => {
+                content += line + '\n'
+
+                let response = Response.fromString(content)
+                subscriber({line, end, command, response})
+
                 if (!end) return
 
-                let response = Response.fromString(buffer)
-                buffer = ''
+                content = ''
                 this.removeAllListeners(eventName)
 
                 resolve(response)
@@ -108,6 +111,10 @@ class Controller extends EventEmitter {
 
         this.emit('command-sent', {
             command,
+            subscribe: f => {
+                let g = subscriber
+                subscriber = x => (f(x), g(x))
+            },
             getResponse: () => promise
         })
 
