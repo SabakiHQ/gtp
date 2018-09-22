@@ -79,8 +79,14 @@ class Controller extends EventEmitter {
             if (this.process == null) this.start()
 
             let commandString = Command.toString(command)
-            if (commandString.trim() === '') {
-                return resolve(Response.fromString(''))
+
+            if (commandString === '') {
+                let response = Response.fromString('')
+
+                subscriber({line: '\n', end: true, command, response})
+                resolve(response)
+
+                return
             }
 
             let eventName = `response-${_internalId}`

@@ -9,6 +9,7 @@ let lineReader = readline.createInterface({
 async function handleInput(input) {
     await new Promise(resolve => setTimeout(resolve, 300))
 
+    if (input === '') return ''
     if (input === 'multiline') return '= multiline\nok\n\n'
     return '= ok\n\n'
 }
