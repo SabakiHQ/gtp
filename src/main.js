@@ -11,8 +11,10 @@ if (process.platform === 'darwin') {
     exec('/bin/bash -ilc "env; exit"', (err, result) => {
         if (err) return
 
-        process.env.PATH = result.trim().split('\n')
+        let [_, path] = result.trim().split('\n')
             .map(x => x.split('='))
-            .find(x => x[0] === 'PATH')[1]
+            .find(x => x[0] === 'PATH') || []
+
+        if (path != null) process.env.PATH = path
     })
 }
