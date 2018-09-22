@@ -1,6 +1,7 @@
 const {spawn} = require('child_process')
 const EventEmitter = require('events')
 const {Command, Response} = require('./main')
+const lineSubscribe = require('./lineSubscribe')
 
 class Controller extends EventEmitter {
     constructor(path, args = [], spawnOptions = {}) {
@@ -11,8 +12,6 @@ class Controller extends EventEmitter {
         this.spawnOptions = spawnOptions
 
         this._counter = 0
-        this._outBuffer = ''
-        this._errBuffer = ''
 
         this.commands = []
         this.process = null
@@ -34,35 +33,17 @@ class Controller extends EventEmitter {
             this.emit('stopped', {signal})
         })
 
-        this.process.stdout.on('data', data => {
-            this._outBuffer += (data + '').replace(/\r/g, '').replace(/\t/g, ' ')
+        lineSubscribe(this.process.stdout, line => {
+            if (this.commands.length > 0) {
+                let end = line === ''
+                let {_internalId} = !end ? this.commands[0] : this.commands.shift()
 
-            let start = this._outBuffer.indexOf('\n\n')
-
-            while (start !== -1) {
-                let response = Response.fromString(this._outBuffer.slice(0, start))
-                this._outBuffer = this._outBuffer.slice(start + 2)
-
-                if (this.commands.length > 0) {
-                    let {_internalId} = this.commands.shift()
-                    this.emit(`response-${_internalId}`, response)
-                }
-
-                start = this._outBuffer.indexOf('\n\n')
+                this.emit(`response-${_internalId}`, {content: line, end})
             }
         })
 
-        this.process.stderr.on('data', data => {
-            this._errBuffer += (data + '').replace(/\r/g, '').replace(/\t/g, ' ')
-
-            let start = this._errBuffer.indexOf('\n')
-
-            while (start !== -1) {
-                this.emit('stderr', {content: this._errBuffer.slice(0, start)})
-                this._errBuffer = this._errBuffer.slice(start + 1)
-
-                start = this._errBuffer.indexOf('\n')
-            }
+        lineSubscribe(this.process.stderr, line => {
+            this.emit('stderr', {content: line.trim()})
         })
 
         this.emit('started')
@@ -80,7 +61,7 @@ class Controller extends EventEmitter {
             this.sendCommand(Command.fromString('quit'))
             .then(response => response.error ? Promise.reject(new Error(response.content)) : response)
             .then(() => clearTimeout(timeoutId))
-            .catch(err => this.kill())
+            .catch(_ => this.kill())
             .then(resolve)
         })
     }
@@ -103,13 +84,24 @@ class Controller extends EventEmitter {
             }
 
             let eventName = `response-${_internalId}`
-            this.once(eventName, resolve)
+            let buffer = ''
+
+            this.on(eventName, ({content, end}) => {
+                buffer += content + '\n'
+                if (!end) return
+
+                let response = Response.fromString(buffer)
+                buffer = ''
+                this.removeAllListeners(eventName)
+
+                resolve(response)
+            })
 
             try {
                 this.commands.push(Object.assign({_internalId}, command))
                 this.process.stdin.write(commandString + '\n')
             } catch (err) {
-                this.removeListener(eventName, resolve)
+                this.removeAllListeners(eventName)
                 reject(new Error('GTP engine connection error'))
             }
         })
