@@ -39,10 +39,7 @@ Use the [`Engine`](#engine) class to create an engine:
 ~~~js
 const {Engine} = require('@sabaki/gtp')
 
-let testEngine = new Engine()
-
-testEngine.command('name', 'Test Engine')
-testEngine.command('version', '0.1')
+let testEngine = new Engine('Test Engine', '0.1')
 
 testEngine.command('play', (command, out) => {
     if (command.args.length === 0) return out.err('player not specified')
@@ -231,7 +228,7 @@ This event is emitted after a command has been processed.
 #### `engine.command(name, handler)`
 
 - `name` `<String>` - The command name.
-- `handler` `<Function>`
+- `handler` `<Function>` | `<String>`
 
 Sets a handler for the given command. `handler` will be called with the following arguments:
 
@@ -241,6 +238,8 @@ Sets a handler for the given command. `handler` will be called with the followin
     - `err(content)` - Sends an error response with the given content.
     - `write(content)` - Writes given content to response.
     - `end(content)` - When using `write`, use this function to specify end of response.
+
+You can pass a string as `handler` to immediately return a response as well.
 
 #### `engine.start([options])`
 
