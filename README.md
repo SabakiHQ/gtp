@@ -236,7 +236,7 @@ This event is emitted after a command has been processed.
 Sets a handler for the given command. `handler` will be called with the following arguments:
 
 - `command` [`<Command>`](#command)
-- `out` <Object>
+- `out` `<Object>`
     - `send(content)` - Sends a successful response with the given content.
     - `err(content)` - Sends an error response with the given content.
     - `write(content)` - Writes given content to response.
