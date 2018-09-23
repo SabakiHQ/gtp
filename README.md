@@ -13,7 +13,7 @@ $ npm install @sabaki/gtp
 ## Usage
 ### Controller Usage
 
-Use the `Controller` class to interact with an engine:
+Use the [`Controller`](#controller) class to interact with an engine:
 
 ~~~js
 const {Controller, Command, Response} = require('@sabaki/gtp')
@@ -34,7 +34,7 @@ main()
 
 ### Engine Usage
 
-Use the `Engine` class to create an engine:
+Use the [`Engine`](#engine) class to create an engine:
 
 ~~~js
 const {Engine} = require('@sabaki/gtp')
@@ -184,3 +184,68 @@ Sends a command to the engine and returns a [response object](#response). You ca
 - `end` `<Boolean>` - `true` if incoming line is the last line of response.
 - `command` [`<Command>`](#command) - The command to which the response belongs.
 - `response` [`<Response>`](#response) - The partial response until the incoming line with all the previous lines.
+
+### Engine
+
+`Engine` extends [`EventEmitter`](https://nodejs.org/api/events.html).
+
+#### `new Engine([name[, version]])`
+
+- `name` `<String>` *(optional)*
+- `version` `<String>` *(optional)*
+
+#### Event: `command-received`
+
+- `evt` `<Object>`
+    - `command` [`<Command>`](#command)
+
+This event is emitted after a command has been received.
+
+#### Event: `command-processing`
+
+- `evt` `<Object>`
+    - `command` [`<Command>`](#command)
+
+This event is emitted when a command is about to be processed.
+
+#### Event: `command-processed`
+
+- `evt` `<Object>`
+    - `command` [`<Command>`](#command)
+    - `response` [`<Response>`](#response)
+
+This event is emitted after a command has been processed.
+
+#### `engine.handlers`
+
+`<Object>` - An object with the command names as keys, and handler functions as values.
+
+#### `engine.commands`
+
+[`<Command[]>`](#command) - The command queue.
+
+#### `engine.busy`
+
+`<Boolean>` - If `true`, a command is being processed right now.
+
+#### `engine.command(name, handler)`
+
+- `name` `<String>` - The command name.
+- `handler` `<Function>`
+
+Sets a handler for the given command. `handler` will be called with the following arguments:
+
+- `command` [`<Command>`](#command)
+- `out` <Object>
+    - `send(content)` - Sends a successful response with the given content.
+    - `err(content)` - Sends an error response with the given content.
+    - `write(content)` - Writes given content to response.
+    - `end(content)` - When using `write`, use this function to specify end of response.
+
+#### `engine.start([options])`
+
+- `options` `<Object>` *(optional)*
+    - `input` [`<Readable>`](https://nodejs.org/api/stream.html#stream_class_stream_readable) *(optional)* - Default: `process.stdin`
+    - `output` [`<Writable>`](https://nodejs.org/api/stream.html#stream_class_stream_writable) *(optional)* - Default: `process.stdout`
+
+Starts listening to commands.
