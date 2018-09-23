@@ -18,10 +18,10 @@ const {Controller, Command, Response} = require('@sabaki/gtp')
 async function main() {
     let leela = new Controller('./path/to/leela', ['--gtp', '--noponder'])
     leela.start()
-    
+
     let {id, content, error} = await leela.sendCommand({name: 'genmove', args: ['B']})
     if (error) throw new Error('Leela throwed an error!')
-    
+
     console.log(content)
     await leela.stop()
 }
@@ -36,9 +36,9 @@ A GTP command is represented by an object of the following form:
 
 ~~~js
 {
-    id?: Integer | null,
-    name: String,
-    args?: String[]
+    id?: <Integer> | null,
+    name: <String>,
+    args?: <String[]>
 }
 ~~~
 
@@ -60,9 +60,9 @@ A response from a GTP engine is represented by an object of the following form:
 
 ~~~js
 {
-    id?: Integer | null,
-    content: String,
-    error?: Boolean
+    id?: <Integer> | null,
+    content: <String>,
+    error?: <Boolean>
 }
 ~~~
 
@@ -110,9 +110,10 @@ This event is emitted when the engine process finishes printing a line on stderr
 
 - `evt` `<Object>`
     - `command` [`<Command>`](#command)
+    - `subscribe(subscriber)`
     - `async getResponse()` [`<Response>`](#response)
 
-This event is emitted when a command is sent to the engine.
+This event is emitted when a command is sent to the engine. Using the `subscribe` function you can get updates every time the engine responds with a new line, see [controller.sendCommand()](#async-controllersendcommandcommand-subscriber).
 
 #### `controller.path`
 
@@ -148,8 +149,15 @@ Sends a `quit` command to the engine. If engine doesn't respond, it will be kill
 
 Kills the engine process.
 
-#### `async controller.sendCommand(command)`
+#### `async controller.sendCommand(command[, subscriber])`
 
 - `command` [`<Command>`](#command)
+- `subscriber` `<Function>` *(optional)*
+    - `evt` `<Object>`
 
-Sends a command to the engine and returns a [response object](#response).
+Sends a command to the engine and returns a [response object](#response). You can pass a `subscriber` function to get updates every time the engine responds with a new line. `subscriber` is called with an object `evt` with the following properties:
+
+- `line` `<String>` - The contents of the incoming line.
+- `end` `<Boolean>` - `true` if incoming line is the last line of response.
+- `command` [`<Command>`](#command) - The command to which the response belongs.
+- `response` [`<Response>`](#response) - The partial response until the incoming line with all the previous lines.
