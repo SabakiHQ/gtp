@@ -12,5 +12,5 @@ exports.fromString = function(input) {
 }
 
 exports.toString = function({id = null, content, error = false}) {
-    return `${error ? '?' : '='}${id != null ? id : ''} ${content}`.trim()
+    return `${error ? '?' : '='}${id != null ? id : ''} ${content ? content : ''}`.trim()
 }

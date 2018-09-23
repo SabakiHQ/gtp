@@ -10,8 +10,8 @@ module.exports = class Engine extends EventEmitter {
             'protocol_version': '2',
             'name': '',
             'version': '',
-            'list_commands': Object.keys(this._routes).join('\n'),
-            'quit': () => process.exit()
+            'list_commands': (_, {send}) => send(Object.keys(this._routes).join('\n')),
+            'quit': (_, {end}) => (end(), process.exit())
         }
     }
 
@@ -46,32 +46,47 @@ module.exports = class Engine extends EventEmitter {
             let response = {id: command.id, content: ''}
 
             if (typeof handler !== 'function') {
-                let content = handler.toString()
+                let content = handler ? handler.toString() : ''
                 handler = (_, {send}) => send(content)
             }
 
-            await new Promise(resolve =>
+            let notWritten = true
+            let write = await new Promise(resolve =>
                 handler(command, {
                     write(content) {
+                        if (notWritten) {
+                            output.write(Response.toString(response) + ' ')
+                            notWritten = false
+                        }
+
                         response.content += content
+                        output.write(content)
                     },
                     end() {
-                        resolve()
+                        if (notWritten) {
+                            output.write(Response.toString(response) + ' ')
+                            notWritten = false
+                        }
+
+                        output.write('\n\n')
+                        resolve(false)
                     },
                     err(content) {
                         response.content = content
                         response.error = true
-                        resolve()
+                        resolve(true)
                     },
                     send(content) {
                         response.content = content
-                        resolve()
+                        resolve(true)
                     }
                 })
             )
 
-            output.write(Response.toString(response))
-            output.write('\n\n')
+            if (write) {
+                output.write(Response.toString(response))
+                output.write('\n\n')
+            }
         })
 
         lineReader.prompt()
