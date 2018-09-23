@@ -62,7 +62,7 @@ class Controller extends EventEmitter {
         })
 
         lineSubscribe(this.process.stderr, line => {
-            this.emit('stderr', {content: line.trim()})
+            this.emit('stderr', {content: line})
         })
 
         this.emit('started')
