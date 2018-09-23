@@ -1,5 +1,5 @@
 exports.fromString = function(input) {
-    input = input.replace(/\t/g, ' ').replace(/#.*?$/, '').trim()
+    input = input.replace(/#.*?$/, '').trim()
 
     let inputs = input.split(/\s+/)
     let id = parseInt(inputs[0], 10)

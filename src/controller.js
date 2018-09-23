@@ -12,6 +12,7 @@ class Controller extends EventEmitter {
         this.spawnOptions = spawnOptions
 
         this._counter = 0
+        this._responseLineEmitter = new EventEmitter()
 
         this.commands = []
         this.process = null
@@ -24,8 +25,7 @@ class Controller extends EventEmitter {
 
         this.process.on('exit', signal => {
             this._counter = 0
-            this._outBuffer = ''
-            this._errBuffer = ''
+            this._responseLineEmitter.removeAllListeners()
 
             this.commands = []
             this.process = null
@@ -38,7 +38,7 @@ class Controller extends EventEmitter {
                 let end = line === ''
                 let {_internalId} = !end ? this.commands[0] : this.commands.shift()
 
-                this.emit(`response-${_internalId}`, {line, end})
+                this._responseLineEmitter.emit(`response-${_internalId}`, {line, end})
             }
         })
 
@@ -92,7 +92,7 @@ class Controller extends EventEmitter {
             let eventName = `response-${_internalId}`
             let content = ''
 
-            this.on(eventName, ({line, end}) => {
+            this._responseLineEmitter.on(eventName, ({line, end}) => {
                 content += line + '\n'
 
                 let response = Response.fromString(content)
@@ -101,7 +101,7 @@ class Controller extends EventEmitter {
                 if (!end) return
 
                 content = ''
-                this.removeAllListeners(eventName)
+                this._responseLineEmitter.removeAllListeners(eventName)
 
                 resolve(response)
             })
@@ -110,7 +110,7 @@ class Controller extends EventEmitter {
                 this.commands.push(Object.assign({_internalId}, command))
                 this.process.stdin.write(commandString + '\n')
             } catch (err) {
-                this.removeAllListeners(eventName)
+                this._responseLineEmitter.removeAllListeners(eventName)
                 reject(new Error('GTP engine connection error'))
             }
         })
