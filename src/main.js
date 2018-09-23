@@ -3,6 +3,7 @@ const {exec} = require('child_process')
 exports.Command = require('./command')
 exports.Response = require('./response')
 exports.Controller = require('./controller')
+exports.Engine = require('./engine')
 
 // System paths are not inherited in macOS
 // This is a quick & dirty fix
