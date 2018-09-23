@@ -1,9 +1,8 @@
 const {Engine} = require('..')
 
-let testEngine = new Engine()
+let testEngine = new Engine('Test Engine', '0.1')
 
-testEngine.command('name', 'Test Engine')
-testEngine.command('version', '0.1')
+testEngine.command('text', 'Hello World!')
 
 testEngine.command('delay', (_, out) => {
     setTimeout(() => out.send('ok'), 500)

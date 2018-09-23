@@ -3,14 +3,14 @@ const readline = require('readline')
 const {Command, Response} = require('./main')
 
 module.exports = class Engine extends EventEmitter {
-    constructor() {
+    constructor(name = '', version = '') {
         super()
 
-        this._routes = {
+        this.handlers = {
             'protocol_version': '2',
-            'name': '',
-            'version': '',
-            'list_commands': (_, {send}) => send(Object.keys(this._routes).join('\n')),
+            'name': name,
+            'version': version,
+            'list_commands': (_, {send}) => send(Object.keys(this.handlers).join('\n')),
             'quit': (_, {end}) => (end(), process.exit())
         }
 
@@ -19,16 +19,18 @@ module.exports = class Engine extends EventEmitter {
     }
 
     command(name, handler) {
-        this._routes[name] = handler
+        this.handlers[name] = handler
     }
 
-    async processCommands({output = process.stdout} = {}) {
+    async _processCommands({output = process.stdout} = {}) {
         if (this.commands.length === 0 || this.busy) return
 
         let command = this.commands.shift()
         this.busy = true
 
-        if (!(command.name in this._routes)) {
+        this.emit('command-processing', {command})
+
+        if (!(command.name in this.handlers)) {
             output.write(Response.toString({
                 id: command.id,
                 error: true,
@@ -36,10 +38,11 @@ module.exports = class Engine extends EventEmitter {
             }))
             output.write('\n\n')
 
+            this.busy = false
             return
         }
 
-        let handler = this._routes[command.name]
+        let handler = this.handlers[command.name]
         let response = {id: command.id, content: ''}
 
         if (typeof handler !== 'function') {
@@ -83,8 +86,10 @@ module.exports = class Engine extends EventEmitter {
             output.write('\n\n')
         }
 
+        this.emit('command-processed', {command, response})
+
         this.busy = false
-        await this.processCommands({output})
+        await this._processCommands({output})
     }
 
     start({input = process.stdin, output = process.stdout} = {}) {
@@ -100,7 +105,7 @@ module.exports = class Engine extends EventEmitter {
             this.commands.push(command)
 
             this.emit('command-received', {command})
-            this.processCommands({output})
+            this._processCommands({output})
         })
 
         lineReader.prompt()
