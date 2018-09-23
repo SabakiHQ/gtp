@@ -1,22 +1,21 @@
-const readline = require('readline')
+const {Engine} = require('..')
 
-let lineReader = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-    prompt: ''
+let testEngine = new Engine()
+
+testEngine.command('name', 'Test Engine')
+testEngine.command('version', '0.1')
+
+testEngine.command('delay', (_, {send}) => {
+    setTimeout(() => send('ok'), 500)
 })
 
-async function handleInput(input) {
-    await new Promise(resolve => setTimeout(resolve, 300))
-
-    if (input === '') return ''
-    if (input === 'multiline') return '= multiline\nok\n\n'
-    return '= ok\n\n'
-}
-
-lineReader.on('line', async input => {
-    process.stdout.write(await handleInput(input))
-    if (input === 'quit') process.exit()
+testEngine.command('multiline', (_, {write, end}) => {
+    setTimeout(() => write('multi\n'), 500)
+    setTimeout(() => (write('line'), end()), 1000)
 })
 
-lineReader.prompt()
+testEngine.command('erring', (_, {err}) => {
+    err('error!')
+})
+
+testEngine.start()
