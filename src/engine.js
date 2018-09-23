@@ -10,8 +10,8 @@ module.exports = class Engine extends EventEmitter {
             'protocol_version': '2',
             'name': name,
             'version': version,
-            'list_commands': (_, {send}) => send(Object.keys(this.handlers).join('\n')),
-            'quit': (_, {end}) => (end(), process.exit())
+            'list_commands': (_, out) => out.send(Object.keys(this.handlers).join('\n')),
+            'quit': (_, out) => (out.end(), process.exit())
         }
 
         this.commands = []
@@ -96,10 +96,9 @@ module.exports = class Engine extends EventEmitter {
         let lineReader = readline.createInterface({input, output, prompt: ''})
 
         lineReader.on('line', line => {
-            if (line === '') {
-                output.write('\n')
-                return
-            }
+            line = line.replace(/#.*?$/, '').trim()
+
+            if (line === '') return
 
             let command = Command.fromString(line)
             this.commands.push(command)
