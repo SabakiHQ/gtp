@@ -11,6 +11,9 @@ $ npm install @sabaki/gtp
 ~~~
 
 ## Usage
+### Controller Usage
+
+Use the `Controller` class to interact with an engine:
 
 ~~~js
 const {Controller, Command, Response} = require('@sabaki/gtp')
@@ -27,6 +30,26 @@ async function main() {
 }
 
 main()
+~~~
+
+### Engine Usage
+
+Use the `Engine` class to create an engine:
+
+~~~js
+const {Engine} = require('@sabaki/gtp')
+
+let testEngine = new Engine()
+
+testEngine.command('name', 'Test Engine')
+testEngine.command('version', '0.1')
+
+testEngine.command('play', (command, out) => {
+    if (command.args.length === 0) return out.err('player not specified')
+    out.send('playing for ' + command.args[0])
+})
+
+testEngine.start()
 ~~~
 
 ## API
