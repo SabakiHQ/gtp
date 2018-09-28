@@ -7,7 +7,7 @@ exports.fromString = function(input) {
     input = input.slice(1)
     let id = hasId ? +input.split(/\s/)[0] : null
 
-    if (hasId) input = input.slice((id + '').length)
+    if (hasId && !isNaN(id)) input = input.slice((id + '').length)
     return {id, content: input.trim(), error}
 }
 

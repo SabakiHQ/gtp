@@ -99,7 +99,7 @@ class Controller extends EventEmitter {
 
             let commandString = Command.toString(command)
 
-            if (commandString === '') {
+            if (commandString.trim() === '') {
                 let response = Response.fromString('')
 
                 subscriber({line: '\n', end: true, command, response})

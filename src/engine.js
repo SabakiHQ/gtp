@@ -98,7 +98,7 @@ module.exports = class Engine extends EventEmitter {
         lineReader.on('line', line => {
             line = line.replace(/#.*?$/, '').trim()
 
-            if (line === '') return
+            if (line.trim() === '') return
 
             let command = Command.fromString(line)
             this.commands.push(command)
