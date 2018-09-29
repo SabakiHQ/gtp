@@ -22,4 +22,9 @@ testEngine.command('erring', (_, out) => {
     out.err('error!')
 })
 
+testEngine.command('wrong', (_, out) => {
+    console.log('wrong')
+    out.send('response')
+})
+
 testEngine.start()

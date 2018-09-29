@@ -110,8 +110,15 @@ class Controller extends EventEmitter {
 
             let eventName = `response-${_internalId}`
             let content = ''
+            let firstLine = true
 
             this._responseLineEmitter.on(eventName, ({line, end}) => {
+                if (firstLine && (line.length === 0 || !'=?'.includes(line[0]))) {
+                    // Ignore
+                    return
+                }
+
+                firstLine = false
                 content += line + '\n'
 
                 let response = Response.fromString(content)
