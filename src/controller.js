@@ -92,13 +92,10 @@ class Controller extends EventEmitter {
     }
 
     async sendCommand(command, subscriber = () => {}) {
-        let _internalId = ++this._counter
-
         let promise = new Promise((resolve, reject) => {
             if (this.process == null) this.start()
 
             let commandString = Command.toString(command)
-
             if (commandString.trim() === '') {
                 let response = Response.fromString('')
 
@@ -108,9 +105,18 @@ class Controller extends EventEmitter {
                 return
             }
 
+            let _internalId = ++this._counter
             let eventName = `response-${_internalId}`
             let content = ''
             let firstLine = true
+
+            let handleExit = () => reject(new Error('GTP engine has stopped'))
+            let cleanUp = () => {
+                this._responseLineEmitter.removeAllListeners(eventName)
+                this.process.removeListener('exit', handleExit)
+            }
+
+            this.process.once('exit', handleExit)
 
             this._responseLineEmitter.on(eventName, ({line, end}) => {
                 if (firstLine && (line.length === 0 || !'=?'.includes(line[0]))) {
@@ -127,8 +133,8 @@ class Controller extends EventEmitter {
                 if (!end) return
 
                 content = ''
-                this._responseLineEmitter.removeAllListeners(eventName)
 
+                cleanUp()
                 resolve(response)
             })
 
@@ -136,7 +142,7 @@ class Controller extends EventEmitter {
                 this.commands.push(Object.assign({_internalId}, command))
                 this.process.stdin.write(commandString + '\n')
             } catch (err) {
-                this._responseLineEmitter.removeAllListeners(eventName)
+                cleanUp()
                 reject(new Error('GTP engine connection error'))
             }
         })
