@@ -22,14 +22,18 @@ async function main() {
     let leela = new Controller('./path/to/leela', ['--gtp', '--noponder'])
     leela.start()
 
-    let {id, content, error} = await leela.sendCommand({name: 'genmove', args: ['B']})
-    if (error) throw new Error('Leela throwed an error!')
+    try {
+        let {id, content, error} = await leela.sendCommand({name: 'genmove', args: ['B']})
+        if (error) throw new Error('Command not understood by Leela!')
+    } catch (err) {
+        throw new Error('Failed to send command!')
+    }
 
     console.log(content)
     await leela.stop()
 }
 
-main()
+main().catch(err => console.log(`Error: ${err}`))
 ~~~
 
 ### Engine Usage
