@@ -25,11 +25,12 @@ async function main() {
     try {
         let {id, content, error} = await leela.sendCommand({name: 'genmove', args: ['B']})
         if (error) throw new Error('Command not understood by Leela!')
+
+        console.log(content)
     } catch (err) {
         throw new Error('Failed to send command!')
     }
 
-    console.log(content)
     await leela.stop()
 }
 
