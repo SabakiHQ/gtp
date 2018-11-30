@@ -1,7 +1,22 @@
-const {spawn} = require('child_process')
+const {spawn, exec} = require('child_process')
 const EventEmitter = require('events')
 const {StreamController} = require('./main')
 const {lineSubscribe} = require('./helper')
+
+// System paths are not inherited in macOS
+// This is a quick & dirty fix
+
+if (process.platform === 'darwin') {
+    exec('/bin/bash -ilc "env; exit"', (err, result) => {
+        if (err) return
+
+        let [_, path] = result.trim().split('\n')
+            .map(x => x.split('='))
+            .find(x => x[0] === 'PATH') || []
+
+        if (path != null) process.env.PATH = path
+    })
+}
 
 class Controller extends EventEmitter {
     constructor(path, args = [], spawnOptions = {}) {
@@ -13,6 +28,7 @@ class Controller extends EventEmitter {
         this.args = args
         this.spawnOptions = spawnOptions
         this.process = null
+        this.commands = []
     }
 
     start() {
@@ -22,6 +38,8 @@ class Controller extends EventEmitter {
 
         this.process.on('exit', signal => {
             this._streamController = null
+            this.commands = []
+
             this.emit('stopped', {signal})
         })
 
@@ -31,6 +49,7 @@ class Controller extends EventEmitter {
 
         this._streamController = new StreamController(this.process.stdin, this.process.stdout)
         this._streamController.on('command-sent', evt => this.emit('command-sent', evt))
+        this.commands = this._streamController.commands
 
         this.emit('started')
     }
@@ -38,17 +57,21 @@ class Controller extends EventEmitter {
     async stop(timeout = 3000) {
         if (this.process == null) return
 
-        return new Promise(resolve => {
+        return new Promise(async resolve => {
             let timeoutId = setTimeout(() => {
                 this.kill()
                 resolve()
             }, timeout)
 
-            this.sendCommand({name: 'quit'})
-            .then(response => response.error ? Promise.reject(new Error(response.content)) : response)
-            .then(() => clearTimeout(timeoutId))
-            .catch(_ => this.kill())
-            .then(resolve)
+            try {
+                let response = await this.sendCommand({name: 'quit'})
+                if (response.error) throw new Error(response.content)
+            } catch (err) {
+                this.kill()
+            }
+
+            clearTimeout(timeoutId)
+            resolve()
         })
     }
 
