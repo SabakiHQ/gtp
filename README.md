@@ -16,20 +16,20 @@ $ npm install @sabaki/gtp
 Use the [`Controller`](#controller) class to interact with an engine:
 
 ~~~js
-const {Controller, Command, Response} = require('@sabaki/gtp')
+const {StreamController, Controller, Command, Response} = require('@sabaki/gtp')
 
 async function main() {
     let leela = new Controller('./path/to/leela', ['--gtp', '--noponder'])
     leela.start()
 
     let response = null
-    
+
     try {
         response = await leela.sendCommand({name: 'genmove', args: ['B']})
     } catch (err) {
         throw new Error('Failed to send command!')
     }
-    
+
     if (response.error) {
         throw new Error('Command not understood by Leela!')
     }
@@ -83,6 +83,8 @@ Returns a `Command` object, representing `input`.
 
 Returns a GTP command string represented by `command` to be sent to an engine.
 
+---
+
 ### Response
 
 A response from a GTP engine is represented by an object of the following form:
@@ -107,9 +109,56 @@ Returns a `Response` object, representing `input`.
 
 Returns a GTP response string represented by `response`, something that an engine might send.
 
+---
+
+### StreamController
+
+`SteamController` extends [`EventEmitter`](https://nodejs.org/api/events.html). Use this class to control GTP engines on arbitrary transportation channels. To spawn engine processes automatically, use [`Controller`](#controller).
+
+#### `new StreamController(input, output)`
+
+- `input` [`<Writable>`](https://nodejs.org/api/stream.html#stream_class_stream_writable)
+- `output` [`<Readable>`](https://nodejs.org/api/stream.html#stream_class_stream_readable)
+
+#### Event: `command-sent`
+
+- `evt` `<Object>`
+    - `command` [`<Command>`](#command)
+    - `subscribe(subscriber)`
+    - `async getResponse()` [`<Response>`](#response)
+
+This event is emitted when a command is sent to the engine. Using the `subscribe` function you can get updates every time the engine responds with a new line, see [streamController.sendCommand()](#async-streamcontrollersendcommandcommand-subscriber).
+
+#### `streamController.input`
+
+[`<Writable>`](https://nodejs.org/api/stream.html#stream_class_stream_writable) - The input stream of the GTP engine.
+
+#### `streamController.output`
+
+[`<Readable>`](https://nodejs.org/api/stream.html#stream_class_stream_readable) - The output stream of the GTP engine.
+
+#### `streamController.commands`
+
+[`<Command[]>`](#command) - The command queue.
+
+#### `async streamController.sendCommand(command[, subscriber])`
+
+- `command` [`<Command>`](#command)
+- `subscriber` `<Function>` *(optional)*
+    - `evt` `<Object>`
+
+Sends a command to the engine and returns a [response object](#response). You can pass a `subscriber` function to get updates every time the engine responds with a new line. `subscriber` is called with an object `evt` with the following properties:
+
+- `line` `<String>` - The contents of the incoming line.
+- `end` `<Boolean>` - `true` if incoming line is the last line of response.
+- `command` [`<Command>`](#command) - The command to which the response belongs.
+- `response` [`<Response>`](#response) - The partial response until the incoming line with all the previous lines.
+
+---
+
 ### Controller
 
-`Controller` extends [`EventEmitter`](https://nodejs.org/api/events.html).
+`Controller` extends [`EventEmitter`](https://nodejs.org/api/events.html). Use this class to spawn GTP engine processes and control them via `stdin` and `stdout`.
 
 #### `new Controller(path[, args[, spawnOptions]])`
 
@@ -137,12 +186,7 @@ This event is emitted when the engine process finishes printing a line on stderr
 
 #### Event: `command-sent`
 
-- `evt` `<Object>`
-    - `command` [`<Command>`](#command)
-    - `subscribe(subscriber)`
-    - `async getResponse()` [`<Response>`](#response)
-
-This event is emitted when a command is sent to the engine. Using the `subscribe` function you can get updates every time the engine responds with a new line, see [controller.sendCommand()](#async-controllersendcommandcommand-subscriber).
+See [corresponding event in `StreamController`](#event-command-sent).
 
 #### `controller.path`
 
@@ -180,20 +224,13 @@ Kills the engine process.
 
 #### `async controller.sendCommand(command[, subscriber])`
 
-- `command` [`<Command>`](#command)
-- `subscriber` `<Function>` *(optional)*
-    - `evt` `<Object>`
+See [corresponding function in `StreamController`](#async-streamcontrollersendcommandcommand-subscriber).
 
-Sends a command to the engine and returns a [response object](#response). You can pass a `subscriber` function to get updates every time the engine responds with a new line. `subscriber` is called with an object `evt` with the following properties:
-
-- `line` `<String>` - The contents of the incoming line.
-- `end` `<Boolean>` - `true` if incoming line is the last line of response.
-- `command` [`<Command>`](#command) - The command to which the response belongs.
-- `response` [`<Response>`](#response) - The partial response until the incoming line with all the previous lines.
+---
 
 ### Engine
 
-`Engine` extends [`EventEmitter`](https://nodejs.org/api/events.html).
+`Engine` extends [`EventEmitter`](https://nodejs.org/api/events.html). Use this class to create a GTP engine using the transportation channels of your choice.
 
 #### `new Engine([name[, version]])`
 
