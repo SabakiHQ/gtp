@@ -113,7 +113,7 @@ Returns a GTP response string represented by `response`, something that an engin
 
 ### StreamController
 
-`SteamController` extends [`EventEmitter`](https://nodejs.org/api/events.html). Use this class to control GTP engines on arbitrary transportation channels. To spawn engine processes automatically, use [`Controller`](#controller).
+`SteamController` extends [`EventEmitter`](https://nodejs.org/api/events.html). Use this class to control GTP engines on arbitrary communication channels. To spawn engine processes automatically, use [`Controller`](#controller).
 
 #### `new StreamController(input, output)`
 
@@ -158,7 +158,7 @@ Sends a command to the engine and returns a [response object](#response). You ca
 
 ### Controller
 
-`Controller` extends [`EventEmitter`](https://nodejs.org/api/events.html). Use this class to spawn GTP engine processes and control them via `stdin` and `stdout`.
+`Controller` extends [`EventEmitter`](https://nodejs.org/api/events.html). Use this class to spawn GTP engine processes and control them over `stdin` and `stdout`.
 
 #### `new Controller(path[, args[, spawnOptions]])`
 
@@ -230,7 +230,7 @@ See [corresponding function in `StreamController`](#async-streamcontrollersendco
 
 ### Engine
 
-`Engine` extends [`EventEmitter`](https://nodejs.org/api/events.html). Use this class to create a GTP engine using the transportation channels of your choice.
+`Engine` extends [`EventEmitter`](https://nodejs.org/api/events.html). Use this class to create a GTP engine using the communication channels of your choice.
 
 #### `new Engine([name[, version]])`
 
