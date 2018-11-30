@@ -1,39 +1,16 @@
 const {spawn} = require('child_process')
 const EventEmitter = require('events')
-const {Command, Response} = require('./main')
-
-function lineSubscribe(readable, subscriber) {
-    let buffer = ''
-
-    readable.on('data', data => {
-        buffer += data.toString().replace(/\r/g, '')
-
-        let newlineIndex = buffer.lastIndexOf('\n')
-
-        if (newlineIndex >= 0) {
-            let lines = buffer.slice(0, newlineIndex).split('\n')
-
-            for (let line of lines) {
-                subscriber(line)
-            }
-
-            buffer = buffer.slice(newlineIndex + 1)
-        }
-    })
-}
+const {StreamController} = require('./main')
 
 class Controller extends EventEmitter {
     constructor(path, args = [], spawnOptions = {}) {
         super()
 
+        this._streamController = null
+
         this.path = path
         this.args = args
         this.spawnOptions = spawnOptions
-
-        this._counter = 0
-        this._responseLineEmitter = new EventEmitter()
-
-        this.commands = []
         this.process = null
     }
 
@@ -43,28 +20,15 @@ class Controller extends EventEmitter {
         this.process = spawn(this.path, this.args, this.spawnOptions)
 
         this.process.on('exit', signal => {
-            this._counter = 0
-            this._responseLineEmitter.removeAllListeners()
-
-            this.commands = []
-            this.process = null
-
+            this._streamController = null
             this.emit('stopped', {signal})
-        })
-
-        lineSubscribe(this.process.stdout, line => {
-            if (this.commands.length > 0) {
-                let end = line === ''
-                let {_internalId} = !end ? this.commands[0] : this.commands.shift()
-
-                this._responseLineEmitter.emit(`response-${_internalId}`, {line, end})
-            }
         })
 
         lineSubscribe(this.process.stderr, line => {
             this.emit('stderr', {content: line})
         })
 
+        this._streamController = new StreamController(this.process.stdin, this.process.stdout)
         this.emit('started')
     }
 
@@ -77,7 +41,7 @@ class Controller extends EventEmitter {
                 resolve()
             }, timeout)
 
-            this.sendCommand(Command.fromString('quit'))
+            this.sendCommand({name: 'quit'})
             .then(response => response.error ? Promise.reject(new Error(response.content)) : response)
             .then(() => clearTimeout(timeoutId))
             .catch(_ => this.kill())
@@ -92,71 +56,9 @@ class Controller extends EventEmitter {
     }
 
     async sendCommand(command, subscriber = () => {}) {
-        let promise = new Promise((resolve, reject) => {
-            if (this.process == null) this.start()
+        if (this.process == null) this.start()
 
-            let commandString = Command.toString(command)
-            if (commandString.trim() === '') {
-                let response = Response.fromString('')
-
-                subscriber({line: '\n', end: true, command, response})
-                resolve(response)
-
-                return
-            }
-
-            let _internalId = ++this._counter
-            let eventName = `response-${_internalId}`
-            let content = ''
-            let firstLine = true
-
-            let handleExit = () => reject(new Error('GTP engine has stopped'))
-            let cleanUp = () => {
-                this._responseLineEmitter.removeAllListeners(eventName)
-                this.process.removeListener('exit', handleExit)
-            }
-
-            this.process.once('exit', handleExit)
-
-            this._responseLineEmitter.on(eventName, ({line, end}) => {
-                if (firstLine && (line.length === 0 || !'=?'.includes(line[0]))) {
-                    // Ignore
-                    return
-                }
-
-                firstLine = false
-                content += line + '\n'
-
-                let response = Response.fromString(content)
-                subscriber({line, end, command, response})
-
-                if (!end) return
-
-                content = ''
-
-                cleanUp()
-                resolve(response)
-            })
-
-            try {
-                this.commands.push(Object.assign({_internalId}, command))
-                this.process.stdin.write(commandString + '\n')
-            } catch (err) {
-                cleanUp()
-                reject(new Error('GTP engine connection error'))
-            }
-        })
-
-        this.emit('command-sent', {
-            command,
-            subscribe: f => {
-                let g = subscriber
-                subscriber = x => (f(x), g(x))
-            },
-            getResponse: () => promise
-        })
-
-        return promise
+        return await this._streamController.sendCommand(command, subscriber)
     }
 }
 
