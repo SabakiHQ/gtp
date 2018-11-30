@@ -237,6 +237,14 @@ See [corresponding function in `StreamController`](#async-streamcontrollersendco
 - `name` `<String>` *(optional)*
 - `version` `<String>` *(optional)*
 
+The following GTP commands have a default implementation:
+
+- `protocol_version`
+- `name`
+- `version`
+- `list_commands`
+- `quit`
+
 #### Event: `command-received`
 
 - `evt` `<Object>`

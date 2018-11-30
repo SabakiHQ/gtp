@@ -5,7 +5,7 @@ let testEngine = new Engine('Test Engine', '0.1')
 testEngine.command('text', 'Hello World!')
 
 testEngine.command('delay', (_, out) => {
-    setTimeout(() => out.send('ok'), 500)
+    setTimeout(() => out.send('ok'), 5000)
 })
 
 testEngine.command('play', (command, out) => {
