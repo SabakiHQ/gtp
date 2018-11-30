@@ -1,6 +1,7 @@
 const {spawn} = require('child_process')
 const EventEmitter = require('events')
 const {StreamController} = require('./main')
+const {lineSubscribe} = require('./helper')
 
 class Controller extends EventEmitter {
     constructor(path, args = [], spawnOptions = {}) {
