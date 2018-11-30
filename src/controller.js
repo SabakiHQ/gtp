@@ -22,11 +22,11 @@ class Controller extends EventEmitter {
     constructor(path, args = [], spawnOptions = {}) {
         super()
 
-        this._streamController = null
-
         this.path = path
         this.args = args
         this.spawnOptions = spawnOptions
+
+        this._streamController = null
         this.process = null
         this.commands = []
     }
@@ -38,6 +38,7 @@ class Controller extends EventEmitter {
 
         this.process.on('exit', signal => {
             this._streamController = null
+            this.process = null
             this.commands = []
 
             this.emit('stopped', {signal})
