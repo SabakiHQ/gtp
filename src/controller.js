@@ -30,6 +30,8 @@ class Controller extends EventEmitter {
         })
 
         this._streamController = new StreamController(this.process.stdin, this.process.stdout)
+        this._streamController.on('command-sent', evt => this.emit('command-sent', evt))
+
         this.emit('started')
     }
 
