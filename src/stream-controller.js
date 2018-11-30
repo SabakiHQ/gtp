@@ -38,7 +38,11 @@ class StreamController extends EventEmitter {
             let content = ''
             let firstLine = true
 
-            let handleClose = () => reject(new Error('GTP engine output has stopped'))
+            let handleClose = () => {
+                cleanUp()
+                reject(new Error('GTP engine output has stopped'))
+            }
+
             let cleanUp = () => {
                 this._responseLineEmitter.removeAllListeners(eventName)
                 this.output.removeListener('close', handleClose)
@@ -58,12 +62,12 @@ class StreamController extends EventEmitter {
                 let response = Response.fromString(content)
                 subscriber({line, end, command, response})
 
-                if (!end) return
+                if (end) {
+                    content = ''
 
-                content = ''
-
-                cleanUp()
-                resolve(response)
+                    cleanUp()
+                    resolve(response)
+                }
             })
 
             try {
