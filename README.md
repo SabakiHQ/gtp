@@ -291,7 +291,7 @@ Sets a handler for the given command. `handler` will be called with the followin
     - `send(content)` - Sends a successful response with the given content.
     - `err(content)` - Sends an error response with the given content.
     - `write(content)` - Writes given content to response.
-    - `end(content)` - When using `write`, use this function to specify end of response.
+    - `end()` - When using `write`, use this method to indicate end of response.
 
 You can pass a string as `handler` to immediately return a response as well.
 
