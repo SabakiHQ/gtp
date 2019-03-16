@@ -21,6 +21,10 @@ class StreamController extends EventEmitter {
         })
     }
 
+    get busy() {
+        return this.commands.length > 0
+    }
+
     async sendCommand(command, subscriber = () => {}) {
         let promise = new Promise((resolve, reject) => {
             let commandString = Command.toString(command)

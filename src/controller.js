@@ -31,6 +31,10 @@ class Controller extends EventEmitter {
         this.commands = []
     }
 
+    get busy() {
+        return this._streamController != null && this._streamController.busy
+    }
+
     start() {
         if (this.process != null) return
 

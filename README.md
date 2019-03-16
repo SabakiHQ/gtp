@@ -141,6 +141,10 @@ This event is emitted when a command is sent to the engine. Using the `subscribe
 
 [`<Command[]>`](#command) - The command queue.
 
+#### `streamController.busy`
+
+`<Boolean>` - Indicates whether the controller is waiting for an engine response or not.
+
 #### `async streamController.sendCommand(command[, subscriber])`
 
 - `command` [`<Command>`](#command)
@@ -207,6 +211,10 @@ See [corresponding event in `StreamController`](#event-command-sent).
 #### `controller.commands`
 
 [`<Command[]>`](#command) - The command queue.
+
+#### `controller.busy`
+
+`<Boolean>` - Indicates whether the controller is waiting for an engine response or not.
 
 #### `controller.start()`
 
