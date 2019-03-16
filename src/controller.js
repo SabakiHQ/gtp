@@ -52,8 +52,14 @@ class Controller extends EventEmitter {
             this.emit('stderr', {content: line})
         })
 
+        if (this._streamController != null) {
+            this._streamController.removeAllListeners()
+        }
+
         this._streamController = new StreamController(this.process.stdin, this.process.stdout)
         this._streamController.on('command-sent', evt => this.emit('command-sent', evt))
+        this._streamController.on('response-received', evt => this.emit('response-received', evt))
+
         this.commands = this._streamController.commands
 
         this.emit('started')

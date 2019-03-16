@@ -34,6 +34,11 @@ class StreamController extends EventEmitter {
                 subscriber({line: '\n', end: true, command, response})
                 resolve(response)
 
+                this.emit('response-received', {
+                    command,
+                    response
+                })
+
                 return
             }
 

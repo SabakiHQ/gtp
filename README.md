@@ -129,6 +129,14 @@ Returns a GTP response string represented by `response`, something that an engin
 
 This event is emitted when a command is sent to the engine. Using the `subscribe` function you can get updates every time the engine responds with a new line, see [streamController.sendCommand()](#async-streamcontrollersendcommandcommand-subscriber).
 
+#### Event: `response-received`
+
+- `evt` `<Object>`
+    - `command` [`<Command>`](#command)
+    - `response` [`<Response>`](#response)
+
+This event is emitted when the engine finishes sending a response.
+
 #### `streamController.input`
 
 [`<Writable>`](https://nodejs.org/api/stream.html#stream_class_stream_writable) - The input stream of the GTP engine.
@@ -191,6 +199,10 @@ This event is emitted when the engine process finishes printing a line on stderr
 #### Event: `command-sent`
 
 See [corresponding event in `StreamController`](#event-command-sent).
+
+#### Event: `response-received`
+
+See [corresponding event in `StreamController`](#event-response-received).
 
 #### `controller.path`
 
