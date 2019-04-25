@@ -10,6 +10,7 @@ module.exports = class Engine extends EventEmitter {
             'protocol_version': '2',
             'name': name,
             'version': version,
+            'known_command': ({args}, out) => out.send(`${args[0] in this.handlers}`),
             'list_commands': (_, out) => out.send(Object.keys(this.handlers).join('\n')),
             'quit': (_, out) => (out.end(), process.exit())
         }
