@@ -22,6 +22,10 @@ testEngine.command('erring', (_, out) => {
     out.err('error!')
 })
 
+testEngine.command('throw', (_, out) => {
+    throw new Error('Some internal error!')
+})
+
 testEngine.command('wrong', (_, out) => {
     console.log('wrong')
     out.send('response')

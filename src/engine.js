@@ -80,7 +80,13 @@ module.exports = class Engine extends EventEmitter {
                 response.content = content
                 resolve(true)
             }
-        }))
+        })).catch(err => {
+            console.error(err)
+
+            response.content = 'internal error'
+            response.error = true
+            return true
+        })
 
         if (write) {
             output.write(Response.toString(response))
