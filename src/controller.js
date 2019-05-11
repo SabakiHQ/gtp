@@ -87,7 +87,7 @@ class Controller extends EventEmitter {
     }
 
     kill() {
-        if (!this.process) return
+        if (this.process == null) return
 
         this.process.kill()
     }

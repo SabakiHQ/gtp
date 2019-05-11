@@ -11,7 +11,9 @@ class StreamController extends EventEmitter {
         this.commands = []
 
         this.input = input
-        this.output = lineSubscribe(output, line => {
+        this.output = output
+
+        lineSubscribe(output, line => {
             if (this.commands.length > 0) {
                 let end = line === ''
                 let {_internalId} = !end ? this.commands[0] : this.commands.shift()

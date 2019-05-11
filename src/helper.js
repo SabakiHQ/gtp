@@ -1,7 +1,6 @@
 exports.lineSubscribe = function(readable, subscriber) {
     let buffer = ''
-
-    readable.on('data', data => {
+    let listener = data => {
         buffer += data.toString().replace(/\r/g, '')
 
         let newlineIndex = buffer.lastIndexOf('\n')
@@ -15,7 +14,8 @@ exports.lineSubscribe = function(readable, subscriber) {
 
             buffer = buffer.slice(newlineIndex + 1)
         }
-    })
+    }
 
-    return readable
+    readable.on('data', listener)
+    return () => readable.removeListener('data', listener)
 }
