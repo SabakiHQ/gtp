@@ -1,5 +1,5 @@
 const EventEmitter = require('events')
-const readline = require('readline')
+const readline = require('./readline')
 const {Command, Response} = require('./main')
 
 module.exports = class Engine extends EventEmitter {
@@ -23,7 +23,7 @@ module.exports = class Engine extends EventEmitter {
         this.handlers[name] = handler
     }
 
-    async _processCommands({output = process.stdout} = {}) {
+    async _processCommands({output}) {
         if (this.commands.length === 0 || this.busy) return
 
         let command = this.commands.shift()
@@ -99,7 +99,12 @@ module.exports = class Engine extends EventEmitter {
         await this._processCommands({output})
     }
 
-    start({input = process.stdin, output = process.stdout} = {}) {
+    start({input = null, output = null} = {}) {
+        if (typeof process !== 'undefined') {
+            if (input == null) input = process.stdin
+            if (output == null) output = process.stdout
+        }
+
         let lineReader = readline.createInterface({input, output, prompt: ''})
 
         lineReader.on('line', line => {
