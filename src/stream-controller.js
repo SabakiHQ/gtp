@@ -13,7 +13,7 @@ class StreamController extends EventEmitter {
         this.input = input
         this.output = output
 
-        lineSubscribe(output, line => {
+        this._unsubscribe = lineSubscribe(output, line => {
             if (this.commands.length > 0) {
                 let end = line === ''
                 let {_internalId} = !end ? this.commands[0] : this.commands.shift()
@@ -100,6 +100,11 @@ class StreamController extends EventEmitter {
         })
 
         return promise
+    }
+
+    close() {
+        this._unsubscribe()
+        this.removeAllListeners()
     }
 }
 

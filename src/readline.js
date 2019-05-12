@@ -12,11 +12,14 @@ module.exports = (() => {
         createInterface({input}) {
             let lineReader = new EventEmitter();
 
-            lineSubscribe(input, line => {
+            this._unsubscribe = lineSubscribe(input, line => {
                 lineReader.emit('line', line)
             })
 
             return lineReader
+        },
+        close() {
+            this._unsubscribe()
         },
         prompt() {}
     }

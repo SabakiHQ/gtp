@@ -40,21 +40,20 @@ class Controller extends EventEmitter {
 
         this.process = spawn(this.path, this.args, this.spawnOptions)
 
+        this._unsubscribeStderr = lineSubscribe(this.process.stderr, line => {
+            this.emit('stderr', {content: line})
+        })
+
         this.process.on('exit', signal => {
+            this._unsubscribeStderr()
+            this._streamController.close()
+
             this._streamController = null
             this.process = null
             this.commands = []
 
             this.emit('stopped', {signal})
         })
-
-        lineSubscribe(this.process.stderr, line => {
-            this.emit('stderr', {content: line})
-        })
-
-        if (this._streamController != null) {
-            this._streamController.removeAllListeners()
-        }
 
         this._streamController = new StreamController(this.process.stdin, this.process.stdout)
         this._streamController.on('command-sent', evt => this.emit('command-sent', evt))

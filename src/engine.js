@@ -105,9 +105,9 @@ module.exports = class Engine extends EventEmitter {
             if (output == null) output = process.stdout
         }
 
-        let lineReader = readline.createInterface({input, output, prompt: ''})
+        this._lineReader = readline.createInterface({input, output, prompt: ''})
 
-        lineReader.on('line', line => {
+        this._lineReader.on('line', line => {
             line = line.replace(/#.*?$/, '').trim()
 
             if (line.trim() === '') return
@@ -119,6 +119,10 @@ module.exports = class Engine extends EventEmitter {
             this._processCommands({output})
         })
 
-        lineReader.prompt()
+        this._lineReader.prompt()
+    }
+
+    stop() {
+        this._lineReader.close()
     }
 }

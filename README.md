@@ -166,6 +166,10 @@ Sends a command to the engine and returns a [response object](#response). You ca
 - `command` [`<Command>`](#command) - The command to which the response belongs.
 - `response` [`<Response>`](#response) - The partial response until the incoming line with all the previous lines.
 
+#### `streamController.close()`
+
+Cleans up listeners.
+
 ---
 
 ### Controller
@@ -322,3 +326,7 @@ You can pass a string as `handler` to immediately return a response as well.
     - `output` [`<Writable>`](https://nodejs.org/api/stream.html#stream_class_stream_writable) *(optional)* - Default: `process.stdout`
 
 Starts listening to commands.
+
+#### `engine.stop()`
+
+Stops listening.
