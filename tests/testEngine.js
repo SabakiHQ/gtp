@@ -26,6 +26,11 @@ testEngine.command('throw', (_, out) => {
     throw new Error('Some internal error!')
 })
 
+testEngine.command('writethrow', (_, out) => {
+    out.write('hi, my name is')
+    throw new Error('Some internal error!')
+})
+
 testEngine.command('wrong', (_, out) => {
     console.log('wrong')
     out.send('response')

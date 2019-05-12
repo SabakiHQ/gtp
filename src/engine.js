@@ -51,14 +51,14 @@ module.exports = class Engine extends EventEmitter {
             handler = (_, {send}) => send(content)
         }
 
-        let notWritten = true
+        let written = false
         let write = await new Promise(resolve => {
             let ended = false
             let end = () => {
                 if (ended) return
-                if (notWritten) {
+                if (!written) {
                     output.write(Response.toString(response) + ' ')
-                    notWritten = false
+                    written = true
                 }
 
                 ended = true
@@ -68,9 +68,10 @@ module.exports = class Engine extends EventEmitter {
 
             let result = handler(command, {
                 write(content) {
-                    if (notWritten) {
+                    if (ended) return
+                    if (!written) {
                         output.write(Response.toString(response) + ' ')
-                        notWritten = false
+                        written = true
                     }
 
                     response.content += content
@@ -78,15 +79,28 @@ module.exports = class Engine extends EventEmitter {
                 },
                 end,
                 err(content) {
-                    response.content = content
-                    response.error = true
-                    ended = true
-                    resolve(true)
+                    if (ended) return
+
+                    if (written) {
+                        this.end()
+                    } else {
+                        response.content = content
+                        response.error = true
+                        ended = true
+                        resolve(true)
+                    }
                 },
                 send(content) {
-                    response.content = content
-                    ended = true
-                    resolve(true)
+                    if (ended) return
+
+                    if (written) {
+                        this.write(content)
+                        this.end()
+                    } else {
+                        response.content = content
+                        ended = true
+                        resolve(true)
+                    }
                 }
             })
 
@@ -96,9 +110,14 @@ module.exports = class Engine extends EventEmitter {
         }).catch(err => {
             console.error(err)
 
-            response.content = 'internal error'
-            response.error = true
-            return true
+            if (!written) {
+                response.content = 'internal error'
+                response.error = true
+                return true
+            } else {
+                output.write('\n\n')
+                return false
+            }
         })
 
         if (write) {
