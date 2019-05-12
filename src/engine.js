@@ -12,7 +12,10 @@ module.exports = class Engine extends EventEmitter {
             'version': version,
             'known_command': ({args}, out) => out.send(`${args[0] in this.handlers}`),
             'list_commands': (_, out) => out.send(Object.keys(this.handlers).join('\n')),
-            'quit': (_, out) => (out.end(), process.exit())
+            'quit': (_, out) => {
+                out.end()
+                this.stop()
+            }
         }
 
         this.commands = []
@@ -137,6 +140,9 @@ module.exports = class Engine extends EventEmitter {
             if (output == null) output = process.stdout
         }
 
+        this.input = input
+        this.output = output
+
         this._lineReader = readline.createInterface({input, output, prompt: ''})
 
         this._lineReader.on('line', line => {
@@ -152,9 +158,20 @@ module.exports = class Engine extends EventEmitter {
         })
 
         this._lineReader.prompt()
+        this.emit('started')
     }
 
     stop() {
         this._lineReader.close()
+
+        if (
+            typeof process !== 'undefined'
+            && this.input === process.stdin
+            && this.output === process.stdout
+        ) {
+            process.exit()
+        }
+
+        this.emit('stopped')
     }
 }
