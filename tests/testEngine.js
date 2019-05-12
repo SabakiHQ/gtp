@@ -31,4 +31,10 @@ testEngine.command('wrong', (_, out) => {
     out.send('response')
 })
 
+testEngine.command('async', async (_, out) => {
+    out.write('look at me!\n')
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    out.write('async and no end')
+})
+
 testEngine.start()

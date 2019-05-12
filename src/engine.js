@@ -52,35 +52,48 @@ module.exports = class Engine extends EventEmitter {
         }
 
         let notWritten = true
-        let write = await new Promise(resolve => handler(command, {
-            write(content) {
+        let write = await new Promise(resolve => {
+            let ended = false
+            let end = () => {
+                if (ended) return
                 if (notWritten) {
                     output.write(Response.toString(response) + ' ')
                     notWritten = false
                 }
 
-                response.content += content
-                output.write(content)
-            },
-            end() {
-                if (notWritten) {
-                    output.write(Response.toString(response) + ' ')
-                    notWritten = false
-                }
-
+                ended = true
                 output.write('\n\n')
                 resolve(false)
-            },
-            err(content) {
-                response.content = content
-                response.error = true
-                resolve(true)
-            },
-            send(content) {
-                response.content = content
-                resolve(true)
             }
-        })).catch(err => {
+
+            let result = handler(command, {
+                write(content) {
+                    if (notWritten) {
+                        output.write(Response.toString(response) + ' ')
+                        notWritten = false
+                    }
+
+                    response.content += content
+                    output.write(content)
+                },
+                end,
+                err(content) {
+                    response.content = content
+                    response.error = true
+                    ended = true
+                    resolve(true)
+                },
+                send(content) {
+                    response.content = content
+                    ended = true
+                    resolve(true)
+                }
+            })
+
+            if (result instanceof Promise) {
+                result.then(end)
+            }
+        }).catch(err => {
             console.error(err)
 
             response.content = 'internal error'
