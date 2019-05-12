@@ -134,14 +134,9 @@ module.exports = class Engine extends EventEmitter {
         await this._processCommands({output})
     }
 
-    start({input = null, output = null} = {}) {
-        if (typeof process !== 'undefined') {
-            if (input == null) input = process.stdin
-            if (output == null) output = process.stdout
-        }
-
-        this.input = input
-        this.output = output
+    start({input = process.stdin, output = process.stdout} = {}) {
+        this._input = input
+        this._output = output
 
         this._lineReader = readline.createInterface({input, output, prompt: ''})
 
@@ -165,9 +160,9 @@ module.exports = class Engine extends EventEmitter {
         this._lineReader.close()
 
         if (
-            typeof process !== 'undefined'
-            && this.input === process.stdin
-            && this.output === process.stdout
+            process.exit != null
+            && this._input === process.stdin
+            && this._output === process.stdout
         ) {
             process.exit()
         }

@@ -1,5 +1,5 @@
-const {spawn, exec} = require('child_process')
 const EventEmitter = require('events')
+const {spawn, exec} = require('./child_process')
 const {StreamController} = require('./main')
 const {lineSubscribe} = require('./helper')
 
