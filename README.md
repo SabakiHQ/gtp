@@ -269,6 +269,14 @@ The following GTP commands have a default implementation:
 - `list_commands`
 - `quit`
 
+#### Event: `started`
+
+This event is emitted when the engine has started.
+
+#### Event: `stopped`
+
+This event is emitted when the engine has stopped.
+
 #### Event: `command-received`
 
 - `evt` `<Object>`
@@ -317,7 +325,9 @@ Sets a handler for the given command. `handler` will be called with the followin
     - `write(content)` - Writes given content to response.
     - `end()` - When using `write`, use this method to indicate end of response.
 
-You can pass a string as `handler` to immediately return a response as well.
+`handler` can be an `async` function or return a `Promise`. In this case, you don't need to call `out.end()` explicitely.
+
+You can also pass a string as `handler` to immediately return a response.
 
 #### `engine.start([options])`
 
