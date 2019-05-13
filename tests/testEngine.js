@@ -42,4 +42,8 @@ testEngine.command('async', async (_, out) => {
     out.write('async and no end')
 })
 
+testEngine.command('asyncthrow', async (_, out) => {
+    throw new Error('Some internal error!')
+})
+
 testEngine.start()

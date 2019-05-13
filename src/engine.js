@@ -55,7 +55,7 @@ module.exports = class Engine extends EventEmitter {
         }
 
         let written = false
-        let write = await new Promise(resolve => {
+        let write = await new Promise((resolve, reject) => {
             let ended = false
             let end = () => {
                 if (ended) return
@@ -108,7 +108,7 @@ module.exports = class Engine extends EventEmitter {
             })
 
             if (result instanceof Promise) {
-                result.then(end)
+                result.then(end).catch(reject)
             }
         }).catch(err => {
             console.error(err)
