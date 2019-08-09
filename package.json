@@ -4,7 +4,7 @@
   "description": "A Node.js module for handling GTP engines.",
   "main": "./src/main.js",
   "scripts": {
-    "test": "tap tests/*.test.js"
+    "test": "tap tests/*.test.js --no-esm"
   },
   "repository": {
     "type": "git",
