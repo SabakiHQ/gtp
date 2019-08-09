@@ -1,4 +1,4 @@
-const {Engine} = require('..')
+const {Engine} = require('../..')
 
 let testEngine = new Engine('Test Engine', '0.1')
 
@@ -44,6 +44,10 @@ testEngine.command('async', async (_, out) => {
 
 testEngine.command('asyncthrow', async (_, out) => {
     throw new Error('Some internal error!')
+})
+
+testEngine.command('longwait', (_, out) => {
+    setTimeout(() => out.send(), 3000)
 })
 
 testEngine.start()

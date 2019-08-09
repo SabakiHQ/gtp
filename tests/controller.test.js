@@ -3,7 +3,7 @@ const {join} = require('path')
 const {Controller} = require('..')
 
 t.beforeEach(async (_, t) => {
-    t.context.controller = new Controller('node', [join(__dirname, 'testEngine.js')])
+    t.context.controller = new Controller('node', [join(__dirname, 'engines', 'testEngine.js')])
     t.context.controller.start()
 })
 
@@ -18,6 +18,16 @@ t.test('sendCommand', async t => {
         t.deepEquals(response, {
             id: 5,
             content: 'Test Engine',
+            error: false
+        })
+    })
+
+    t.test('should be able to handle empty commands gracefully', async t => {
+        let response = await t.context.controller.sendCommand({name: '   \t'})
+
+        t.deepEquals(response, {
+            id: null,
+            content: '',
             error: false
         })
     })
@@ -97,5 +107,50 @@ t.test('sendCommand', async t => {
                 error: false
             }
         ])
+    })
+
+    t.test('should emit command-sent event', t => {
+        let counter = 0
+
+        t.context.controller.once('command-sent', async evt => {
+            evt.subscribe(evt => counter++)
+            t.deepEquals(evt.command, {name: 'async'})
+
+            let response = await evt.getResponse()
+            t.deepEquals(response, {
+                id: null,
+                content: 'look at me!\nasync and no end',
+                error: false
+            })
+
+            t.equals(counter, 6)
+            t.end()
+        })
+
+        t.context.controller.sendCommand({name: 'async'}, evt => counter++)
+    })
+
+    t.test('should emit response-receive event', t => {
+        t.context.controller.once('response-received', evt => {
+            t.deepEquals(evt, {
+                command: {name: 'async'},
+                response: {
+                    id: null,
+                    content: 'look at me!\nasync and no end',
+                    error: false
+                }
+            })
+            t.end()
+        })
+
+        t.context.controller.sendCommand({name: 'async'})
+    })
+
+    t.test('should kill engine when engine is not responding on stop', async t => {
+        t.rejects(t.context.controller.sendCommand({name: 'longwait'}))
+        t.assert(t.context.controller.busy)
+
+        await t.context.controller.stop(1000)
+        t.equals(t.context.controller.process, null)
     })
 })
