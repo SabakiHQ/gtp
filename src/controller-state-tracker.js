@@ -2,46 +2,22 @@ const getDefaultState = () => ({
     dirty: true,
     komi: null,
     boardsize: null,
-    moves: []
+    history: []
 })
 
 const normalizeVertex = vertex => vertex.trim().toLowerCase()
-const moveEquals = (move1, move2) =>
-    move1.color === move2.color
-    && move1.vertex === move2.vertex
-    && (move1.vertices == null) === (move2.vertices == null)
+const commandEquals = (cmd1, cmd2) =>
+    cmd1.name === cmd2.name
     && (
-        move1.vertices == null
-        || move1.vertices.length === move2.vertices.length
-        && move1.vertices.every((x, i) => x === move2.vertices[i])
+        cmd1.args.length === cmd2.args.length
+        && cmd1.args.every((x, i) => x === cmd2.args[i])
     )
 
 class ControllerStateTracker {
     constructor(controller) {
-        this.metaInfo = {
-            name: null,
-            version: null,
-            protocolVersion: null,
-            commands: []
-        }
-
         this.state = getDefaultState()
         this.controller = controller
-
-        controller.on('started', () => {
-            Promise.all([
-                controller.sendCommand({name: 'name'})
-                    .then(response => this.metaInfo.name = response.content),
-                controller.sendCommand({name: 'version'})
-                    .then(response => this.metaInfo.version = response.content),
-                controller.sendCommand({name: 'protocol_version'})
-                    .then(response => this.metaInfo.protocolVersion = response.content),
-                controller.sendCommand({name: 'list_commands'})
-                    .then(response => {
-                        this.metaInfo.commands = response.content.split('\n')
-                    })
-            ]).catch(err => {})
-        })
+        this._commands = null
 
         controller.on('stopped', () => {
             this.state = getDefaultState()
@@ -62,27 +38,29 @@ class ControllerStateTracker {
                 }
             }
 
-            if (command.name === 'boardsize' && command.args.length >= 1) {
+            if (command.name === 'list_commands') {
+                this._commands = res.content.split('\n').map(x => x.trim())
+            } else if (command.name === 'boardsize' && command.args.length >= 1) {
                 this.state.boardsize = +command.args[0]
                 this.state.dirty = true
             } else if (command.name === 'clear_board') {
-                this.state.moves = []
+                this.state.history = []
                 this.state.dirty = false
             } else if (command.name === 'komi' && command.args.length >= 1) {
                 this.state.komi = +command.args[0]
             } else if (['fixed_handicap', 'place_free_handicap'].includes(command.name)) {
                 let vertices = res.content.trim().split(/\s+/).map(normalizeVertex)
 
-                this.state.moves.push({color: 'B', vertices})
+                this.state.history.push({name: 'set_free_handicap', args: vertices})
             } else if (command.name === 'set_free_handicap') {
                 let vertices = command.args.map(normalizeVertex)
 
-                this.state.moves.push({color: 'B', vertices})
+                this.state.history.push({name: 'set_free_handicap', args: vertices})
             } else if (command.name === 'play' && command.args.length >= 2) {
                 let color = command.args[0].trim()[0].toUpperCase() === 'W' ? 'W' : 'B'
                 let vertex = normalizeVertex(command.args[1])
 
-                this.state.moves.push({color, vertex})
+                this.state.history.push({name: 'play', args: [color, vertex]})
             } else if (
                 (command.name === 'genmove' || isGenmoveAnalyzeCommand)
                 && command.args.length >= 1
@@ -101,13 +79,25 @@ class ControllerStateTracker {
                         })
                     })
 
-                if (vertex != null) this.state.moves.push({color, vertex})
+                if (vertex != null) this.state.history.push({name: 'play', args: [color, vertex]})
             } else if (command.name === 'undo') {
-                this.state.moves.length--
+                this.state.history.length--
             } else if (command.name === 'loadsgf') {
                 this.state.dirty = true
             }
         })
+    }
+
+    async knowsCommand(commandName) {
+        if (this._commands == null) {
+            this._commands = this.controller.sendCommand({name: 'list_commands'})
+                .then(res => res.error ? [] : res.content.split('\n').map(x => x.trim()))
+                .catch(_ => [])
+        }
+
+        let commands = await this._commands
+
+        return commands.includes(commandName)
     }
 
     async sync(state) {
@@ -129,49 +119,47 @@ class ControllerStateTracker {
             this.state.dirty = true
         }
 
-        // Update moves
+        // Update history
 
-        let moves = state.moves != null ? state.moves : this.state.moves
-        let promises = state.moves.map(({color, vertex, vertices}, i) => {
-            if (i === 0 && color === 'B' && vertices != null && vertices.length > 0) {
-                return () => controller.sendCommand({name: 'set_free_handicap', args: vertices})
-            } else if (vertex != null) {
-                return () => controller.sendCommand({name: 'play', args: [color, vertex]})
-            }
-        }).filter(x => !!x)
+        let commands = [...(state.history != null ? state.history : this.state.history)]
+        let maxSharedHistoryLength = Math.min(this.state.history.length, commands.length)
+        let sharedHistoryLength = [...Array(maxSharedHistoryLength), null]
+            .findIndex((_, i) =>
+                i === maxSharedHistoryLength
+                || !commandEquals(commands[i], this.state.history[i])
+            )
 
-        let sharedHistoryLength = [...Array(Math.min(this.state.moves.length, moves.length))]
-            .findIndex((_, i) => !moveEquals(moves[i], this.state.moves[i]))
-        if (sharedHistoryLength < 0) sharedHistoryLength = Math.min(this.state.moves.length, moves.length)
-        let undoLength = this.state.moves.length - sharedHistoryLength
+        let undoLength = this.state.history.length - sharedHistoryLength
 
         if (
             !this.state.dirty
             && sharedHistoryLength > 0
             && undoLength < sharedHistoryLength
-            && (this.metaInfo.commands.includes('undo') || undoLength === 0)
+            && (undoLength === 0 || await this.knowsCommand('undo'))
         ) {
             // Undo until shared history is reached, then play out rest
 
-            promises = [
-                ...[...Array(undoLength)].map(() =>
-                    () => controller.sendCommand({name: 'undo'})
-                ),
-                ...promises.slice(sharedHistoryLength)
+            commands = [
+                ...[...Array(undoLength)].map(() => ({name: 'undo'})),
+                ...commands.slice(sharedHistoryLength)
             ]
         } else {
             // Replay from beginning
 
-            promises.unshift(() => controller.sendCommand({name: 'clear_board'}))
+            commands.unshift({name: 'clear_board'})
         }
 
         let result = await Promise.all(
-            promises.map(x => x().then(res => !res.error).catch(_ => false))
+            commands.map(command =>
+                controller.sendCommand(command)
+                .then(res => !res.error)
+                .catch(_ => false)
+            )
         )
 
         let success = result.every(x => x)
         if (!success) {
-            throw new Error('Moves cannot be replayed on engine')
+            throw new Error('History cannot be replayed on engine')
         }
     }
 }
