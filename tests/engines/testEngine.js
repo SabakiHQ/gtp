@@ -1,5 +1,13 @@
 const {Engine} = require('../..')
 
+function getRandomVertex() {
+    let alpha = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'
+    let x = alpha[Math.floor(Math.random() * 19)]
+    let y = Math.floor(Math.random() * 19) + 1
+
+    return `${x}${y}`
+}
+
 let testEngine = new Engine('Test Engine', '0.1')
 
 testEngine.command('text', 'Hello World!')
@@ -8,10 +16,40 @@ testEngine.command('delay', (_, out) => {
     setTimeout(() => out.send('ok'), 5000)
 })
 
+for (let commandName of [
+    'clear_board',
+    'boardsize',
+    'komi',
+    'set_free_handicap',
+    'loadsgf',
+    process.argv.includes('--undo') ? 'undo' : null
+]) {
+    if (commandName == null) continue
+    testEngine.command(commandName, (_, out) => out.send(''))
+}
+
 testEngine.command('play', (command, out) => {
     if (command.args.length === 0) return out.err('player not specified')
     out.send('playing for ' + command.args[0])
 })
+
+testEngine.command('genmove', (_, out) => {
+    if (command.args.length !== 2) return out.err('not enough arguments')
+    out.send(getRandomVertex())
+})
+
+for (let commandName of ['genmove_analyze', 'test-genmove_analyze']) {
+    testEngine.command(commandName, async (command, out) => {
+        if (command.args.length !== 2) return out.err('not enough arguments')
+
+        for (let i = 0; i < 3; i++) {
+            out.write('info move\n')
+            await new Promise(resolve => setTimeout(resolve, 500))
+        }
+
+        out.send(`play ${getRandomVertex()}`)
+    })
+}
 
 testEngine.command('multiline', (_, out) => {
     setTimeout(() => out.write('multi\n'), 500)
