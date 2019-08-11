@@ -93,14 +93,10 @@ class ControllerStateTracker {
 
     async knowsCommand(commandName) {
         if (this._commands == null) {
-            this._commands = this.controller.sendCommand({name: 'list_commands'})
-                .then(res => res.error ? [] : res.content.split('\n').map(x => x.trim()))
-                .catch(_ => [])
+            await this.controller.sendCommand({name: 'list_commands'})
         }
 
-        let commands = await this._commands
-
-        return commands.includes(commandName)
+        return this._commands.includes(commandName)
     }
 
     async sync(state) {
