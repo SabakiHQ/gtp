@@ -242,7 +242,7 @@ Spawns a process of the engine if necessary.
 
 Sends a `quit` command to the engine. If engine doesn't respond, it will be killed after `timeout` ms.
 
-#### `controller.kill()`
+#### `async controller.kill()`
 
 Kills the engine process.
 
