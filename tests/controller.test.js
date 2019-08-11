@@ -56,7 +56,7 @@ t.test('sendCommand', async t => {
 
     t.test('should be able to subscribe to lines', async t => {
         let counter = 0
-        let command = {name: 'async'}
+        let command = {name: 'async', args: []}
 
         let expectedEvents = [
             {
@@ -79,7 +79,7 @@ t.test('sendCommand', async t => {
             }
         ]
 
-        await t.context.controller.sendCommand(command, evt => {
+        await t.context.controller.sendCommand({name: 'async'}, evt => {
             t.deepEquals(evt, expectedEvents[counter])
             counter++
         })

@@ -28,6 +28,8 @@ class StreamController extends EventEmitter {
     }
 
     async sendCommand(command, subscriber = () => {}) {
+        if (command.args == null) command = {...command, args: []}
+
         let promise = new Promise((resolve, reject) => {
             let commandString = Command.toString(command)
             if (commandString.trim() === '') {
