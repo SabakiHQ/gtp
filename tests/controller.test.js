@@ -149,7 +149,7 @@ t.test('sendCommand', async t => {
     })
 
     t.test('should kill engine when it is not responding on stop', async t => {
-        t.rejects(t.context.controller.sendCommand({name: 'longwait'}))
+        t.rejects(t.context.controller.sendCommand({name: 'delay'}))
         t.assert(t.context.controller.busy)
 
         await t.context.controller.kill()

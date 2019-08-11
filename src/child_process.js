@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 module.exports = (() => {
     try {
         let customRequire = eval('require')

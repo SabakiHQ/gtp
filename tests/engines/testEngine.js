@@ -24,11 +24,11 @@ for (let commandName of [
     'loadsgf'
 ]) {
     if (commandName == null) continue
-    testEngine.command(commandName, (_, out) => out.send(''))
+    testEngine.command(commandName, (_, out) => out.send())
 }
 
 testEngine.command('enableundo', (_, out) => {
-    testEngine.command('undo', (_, out) => out.send(''))
+    testEngine.command('undo', (_, out) => out.send())
 
     out.send('undo command enabled')
 })
@@ -74,11 +74,6 @@ testEngine.command('writethrow', (_, out) => {
     throw new Error('Some internal error!')
 })
 
-testEngine.command('wrong', (_, out) => {
-    console.log('wrong')
-    out.send('response')
-})
-
 testEngine.command('async', async (_, out) => {
     out.write('look at me!\n')
     await new Promise(resolve => setTimeout(resolve, 1000))
@@ -87,10 +82,6 @@ testEngine.command('async', async (_, out) => {
 
 testEngine.command('asyncthrow', async (_, out) => {
     throw new Error('Some internal error!')
-})
-
-testEngine.command('longwait', (_, out) => {
-    setTimeout(() => out.send(), 3000)
 })
 
 testEngine.command('invalid', (command, out) => {

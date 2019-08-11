@@ -6,6 +6,7 @@ const {lineSubscribe} = require('./helper')
 // System paths are not inherited in macOS
 // This is a quick & dirty fix
 
+/* istanbul ignore if */
 if (process.platform === 'darwin') {
     exec('/bin/bash -ilc "env; exit"', (err, result) => {
         if (err) return
