@@ -1,3 +1,6 @@
+const Controller = require('./controller')
+const StreamController = require('./stream-controller')
+
 const getDefaultState = () => ({
     dirty: true,
     komi: null,
@@ -162,6 +165,14 @@ class ControllerStateTracker {
             throw new Error('History cannot be replayed on engine')
         }
     }
+}
+
+ControllerStateTracker.fromController = (...args) => {
+    return new ControllerStateTracker(new Controller(...args))
+}
+
+ControllerStateTracker.fromStreamController = (...args) => {
+    return new ControllerStateTracker(new StreamController(...args))
 }
 
 module.exports = ControllerStateTracker
