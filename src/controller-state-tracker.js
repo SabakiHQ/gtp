@@ -1,8 +1,8 @@
+const EventEmitter = require('events')
 const Controller = require('./controller')
 const StreamController = require('./stream-controller')
 
 const getDefaultState = () => ({
-    dirty: true,
     komi: null,
     boardsize: null,
     history: []
@@ -20,7 +20,12 @@ class ControllerStateTracker {
     constructor(controller) {
         this.state = getDefaultState()
         this.controller = controller
+        this.syncing = false
+
+        this._counter = 0
         this._commands = null
+        this._syncFinishedEmitter = new EventEmitter()
+        this._syncQueue = []
 
         controller.on('stopped', () => {
             this.state = getDefaultState()
@@ -45,10 +50,9 @@ class ControllerStateTracker {
                 this._commands = res.content.split('\n').map(x => x.trim())
             } else if (command.name === 'boardsize' && command.args.length >= 1) {
                 this.state.boardsize = +command.args[0]
-                this.state.dirty = true
+                this.state.history = null
             } else if (command.name === 'clear_board') {
                 this.state.history = []
-                this.state.dirty = false
             } else if (command.name === 'komi' && command.args.length >= 1) {
                 this.state.komi = +command.args[0]
             } else if (['fixed_handicap', 'place_free_handicap'].includes(command.name)) {
@@ -86,7 +90,9 @@ class ControllerStateTracker {
             } else if (command.name === 'undo') {
                 this.state.history.length--
             } else if (command.name === 'loadsgf') {
-                this.state.dirty = true
+                this.state.komi = null
+                this.state.boardsize = null
+                this.state.history = null
             }
         })
     }
@@ -99,67 +105,109 @@ class ControllerStateTracker {
         return this._commands.includes(commandName)
     }
 
-    async sync(state) {
+    async _startProcessingSyncs() {
+        if (this.syncing) return
+
+        this.syncing = true
+
+        while (this._syncQueue.length > 0) {
+            try {
+                let entry = this._syncQueue.shift()
+                await this._sync(entry.state)
+
+                this._syncFinishedEmitter.emit('sync-finished', {id: entry.id})
+            } catch (err) {
+                this._syncFinishedEmitter.emit('sync-finished', {id: entry.id, error: err})
+            }
+        }
+
+        this.syncing = false
+    }
+
+    async _sync(state) {
         let controller = this.controller
 
         // Update komi
 
         if (state.komi != null && state.komi !== this.state.komi) {
-            let {error} = await controller.sendCommand({name: 'komi', args: [komi]})
+            let {error} = await controller.sendCommand({name: 'komi', args: [state.komi]})
             if (error) throw new Error('Komi is not supported by engine')
         }
 
         // Update boardsize
 
-        if (this.state.dirty || state.boardsize != null && state.boardsize !== this.state.boardsize) {
+        if (state.boardsize != null && state.boardsize !== this.state.boardsize) {
             let {error} = await controller.sendCommand({name: 'boardsize', args: [state.boardsize]})
             if (error) throw new Error('Board size is not supported by engine')
 
-            this.state.dirty = true
+            this.state.history = null
         }
 
         // Update history
 
-        let commands = [...(state.history != null ? state.history : this.state.history)]
-        let maxSharedHistoryLength = Math.min(this.state.history.length, commands.length)
-        let sharedHistoryLength = [...Array(maxSharedHistoryLength), null]
-            .findIndex((_, i) =>
-                i === maxSharedHistoryLength
-                || !commandEquals(commands[i], this.state.history[i])
+        if (state.history != null) {
+            let commands = [...state.history]
+
+            if (
+                this.state.history != null
+                && sharedHistoryLength > 0
+                && undoLength < sharedHistoryLength
+                && (undoLength === 0 || await this.knowsCommand('undo'))
+            ) {
+                let maxSharedHistoryLength = Math.min(this.state.history.length, commands.length)
+                let sharedHistoryLength = [...Array(maxSharedHistoryLength), null]
+                    .findIndex((_, i) =>
+                        i === maxSharedHistoryLength
+                        || !commandEquals(commands[i], this.state.history[i])
+                    )
+
+                let undoLength = this.state.history.length - sharedHistoryLength
+
+                // Undo until shared history is reached, then play out rest
+
+                commands = [
+                    ...[...Array(undoLength)].map(() => ({name: 'undo'})),
+                    ...commands.slice(sharedHistoryLength)
+                ]
+            } else {
+                // Replay from beginning
+
+                commands.unshift({name: 'clear_board'})
+            }
+
+            let result = await Promise.all(
+                commands.map(command =>
+                    controller.sendCommand(command)
+                    .then(res => !res.error)
+                    .catch(_ => false)
+                )
             )
 
-        let undoLength = this.state.history.length - sharedHistoryLength
-
-        if (
-            !this.state.dirty
-            && sharedHistoryLength > 0
-            && undoLength < sharedHistoryLength
-            && (undoLength === 0 || await this.knowsCommand('undo'))
-        ) {
-            // Undo until shared history is reached, then play out rest
-
-            commands = [
-                ...[...Array(undoLength)].map(() => ({name: 'undo'})),
-                ...commands.slice(sharedHistoryLength)
-            ]
-        } else {
-            // Replay from beginning
-
-            commands.unshift({name: 'clear_board'})
+            let success = result.every(x => x)
+            if (!success) {
+                throw new Error('History cannot be replayed on engine')
+            }
         }
+    }
 
-        let result = await Promise.all(
-            commands.map(command =>
-                controller.sendCommand(command)
-                .then(res => !res.error)
-                .catch(_ => false)
-            )
-        )
+    async sync(state) {
+        let id = this._counter++
 
-        let success = result.every(x => x)
-        if (!success) {
-            throw new Error('History cannot be replayed on engine')
-        }
+        this._syncQueue.push({id, state})
+        this._startProcessingSyncs()
+
+        await new Promise((resolve, reject) => {
+            let listener = evt => {
+                if (evt.id === id) {
+                    this._syncFinishedEmitter.removeListener('sync-finished', listener)
+
+                    if (evt.error != null) reject(evt.error)
+                    else resolve()
+                }
+            }
+
+            this._syncFinishedEmitter.on('sync-finished', listener)
+        })
     }
 }
 
