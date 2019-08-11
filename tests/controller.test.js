@@ -87,7 +87,7 @@ t.test('sendCommand', async t => {
 
     t.test('should be able to handle multiple commands in parallel', async t => {
         let responses = await Promise.all([
-            t.context.controller.sendCommand({name: 'name'}),
+            t.context.controller.sendCommand({name: 'delay'}),
             t.context.controller.sendCommand({name: 'multiline'}),
             t.context.controller.sendCommand({name: 'version'})
         ])
@@ -95,7 +95,7 @@ t.test('sendCommand', async t => {
         t.deepEquals(responses, [
             {
                 id: null,
-                content: 'Test Engine',
+                content: 'ok',
                 error: false
             },
             {

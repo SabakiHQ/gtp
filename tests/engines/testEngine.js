@@ -38,8 +38,8 @@ testEngine.command('play', (command, out) => {
     out.send('playing for ' + command.args[0])
 })
 
-testEngine.command('genmove', (_, out) => {
-    if (command.args.length !== 2) return out.err('not enough arguments')
+testEngine.command('genmove', (command, out) => {
+    if (command.args.length === 0) return out.err('player not specified')
     out.send(getRandomVertex())
 })
 
@@ -53,6 +53,14 @@ for (let commandName of ['genmove_analyze', 'test-genmove_analyze']) {
         }
 
         out.send(`play ${getRandomVertex()}`)
+    })
+}
+
+for (let commandName of ['fixed_handicap', 'place_free_handicap']) {
+    testEngine.command(commandName, async (command, out) => {
+        if (command.args.length === 0) return out.err('not enough arguments')
+
+        out.send([...Array(+command.args[0])].map(_ => getRandomVertex()).join(' '))
     })
 }
 

@@ -8,7 +8,7 @@ const getDefaultState = () => ({
     history: []
 })
 
-const normalizeVertex = vertex => vertex.trim().toLowerCase()
+const normalizeVertex = vertex => vertex.trim().toUpperCase()
 const commandEquals = (cmd1, cmd2) =>
     cmd1.name === cmd2.name
     && (
@@ -111,10 +111,10 @@ class ControllerStateTracker {
         this.syncing = true
 
         while (this._syncQueue.length > 0) {
-            try {
-                let entry = this._syncQueue.shift()
-                await this._sync(entry.state)
+            let entry = this._syncQueue.shift()
 
+            try {
+                await this._sync(entry.state)
                 this._syncFinishedEmitter.emit('sync-finished', {id: entry.id})
             } catch (err) {
                 this._syncFinishedEmitter.emit('sync-finished', {id: entry.id, error: err})
@@ -147,6 +147,13 @@ class ControllerStateTracker {
 
         if (state.history != null) {
             let commands = [...state.history]
+            let maxSharedHistoryLength = Math.min((this.state.history || []).length, commands.length)
+            let sharedHistoryLength = [...Array(maxSharedHistoryLength), null]
+                .findIndex((_, i) =>
+                    i === maxSharedHistoryLength
+                    || !commandEquals(commands[i], this.state.history[i])
+                )
+            let undoLength = (this.state.history || []).length - sharedHistoryLength
 
             if (
                 this.state.history != null
@@ -154,15 +161,6 @@ class ControllerStateTracker {
                 && undoLength < sharedHistoryLength
                 && (undoLength === 0 || await this.knowsCommand('undo'))
             ) {
-                let maxSharedHistoryLength = Math.min(this.state.history.length, commands.length)
-                let sharedHistoryLength = [...Array(maxSharedHistoryLength), null]
-                    .findIndex((_, i) =>
-                        i === maxSharedHistoryLength
-                        || !commandEquals(commands[i], this.state.history[i])
-                    )
-
-                let undoLength = this.state.history.length - sharedHistoryLength
-
                 // Undo until shared history is reached, then play out rest
 
                 commands = [
