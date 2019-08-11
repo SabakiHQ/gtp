@@ -21,12 +21,17 @@ for (let commandName of [
     'boardsize',
     'komi',
     'set_free_handicap',
-    'loadsgf',
-    process.argv.includes('--undo') ? 'undo' : null
+    'loadsgf'
 ]) {
     if (commandName == null) continue
     testEngine.command(commandName, (_, out) => out.send(''))
 }
+
+testEngine.command('enableundo', (_, out) => {
+    testEngine.command('undo', (_, out) => out.send(''))
+
+    out.send('undo command enabled')
+})
 
 testEngine.command('play', (command, out) => {
     if (command.args.length === 0) return out.err('player not specified')
@@ -88,4 +93,10 @@ testEngine.command('longwait', (_, out) => {
     setTimeout(() => out.send(), 3000)
 })
 
-testEngine.start()
+testEngine.command('invalid', (command, out) => {
+    if (command.args[0] === 'before') process.stdout.write('invalid line\n')
+    out.send('ok')
+    if (command.args[0] === 'after') process.stdout.write('invalid line\n')
+})
+
+module.exports = testEngine

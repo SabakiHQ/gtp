@@ -2,8 +2,10 @@ const t = require('tap')
 const {join} = require('path')
 const {Controller} = require('..')
 
+t.setTimeout(60000)
+
 t.beforeEach(async (_, t) => {
-    t.context.controller = new Controller('node', [join(__dirname, 'engines', 'testEngine.js')])
+    t.context.controller = new Controller('node', [join(__dirname, 'engines', 'testEngine.cli.js')])
     t.context.controller.start()
 })
 
@@ -114,7 +116,7 @@ t.test('sendCommand', async t => {
 
         t.context.controller.once('command-sent', async evt => {
             evt.subscribe(evt => counter++)
-            t.deepEquals(evt.command, {name: 'async'})
+            t.deepEquals(evt.command, {name: 'async', args: []})
 
             let response = await evt.getResponse()
             t.deepEquals(response, {
@@ -133,7 +135,7 @@ t.test('sendCommand', async t => {
     t.test('should emit response-receive event', t => {
         t.context.controller.once('response-received', evt => {
             t.deepEquals(evt, {
-                command: {name: 'async'},
+                command: {name: 'async', args: []},
                 response: {
                     id: null,
                     content: 'look at me!\nasync and no end',
@@ -152,5 +154,18 @@ t.test('sendCommand', async t => {
 
         await t.context.controller.stop(1000)
         t.equals(t.context.controller.process, null)
+    })
+
+    t.test('should be rejected when engine unexpectedly crashes', async t => {
+        t.rejects(t.context.controller.sendCommand({name: 'longwait'}))
+        t.context.controller.kill()
+    })
+
+    t.test('should ignore engine output lines outside responses', async t => {
+        let response1 = await t.context.controller.sendCommand({name: 'invalid', args: ['before']})
+        t.equals(response1.content, 'ok')
+
+        let response2 = await t.context.controller.sendCommand({name: 'invalid', args: ['after']})
+        t.equals(response2.content, 'ok')
     })
 })
