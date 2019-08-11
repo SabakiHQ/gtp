@@ -44,9 +44,11 @@ class Controller extends EventEmitter {
             this.emit('stderr', {content: line})
         })
 
-        this.process.on('exit', signal => {
+        this.process.once('exit', signal => {
             this._unsubscribeStderr()
             this._streamController.close()
+            this.process.stdin.destroy()
+            this.process.stdout.destroy()
 
             this._streamController = null
             this.process = null
@@ -77,14 +79,14 @@ class Controller extends EventEmitter {
         }
 
         clearTimeout(timeoutId)
-
         await new Promise(resolve => this.once('stopped', resolve))
     }
 
-    kill() {
+    async kill() {
         if (this.process == null) return
 
         this.process.kill()
+        await new Promise(resolve => this.once('stopped', resolve))
     }
 
     async sendCommand(command, subscriber = () => {}) {

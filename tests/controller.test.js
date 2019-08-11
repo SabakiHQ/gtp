@@ -148,17 +148,12 @@ t.test('sendCommand', async t => {
         t.context.controller.sendCommand({name: 'async'})
     })
 
-    t.test('should kill engine when engine is not responding on stop', async t => {
+    t.test('should kill engine when it is not responding on stop', async t => {
         t.rejects(t.context.controller.sendCommand({name: 'longwait'}))
         t.assert(t.context.controller.busy)
 
-        await t.context.controller.stop(1000)
+        await t.context.controller.kill()
         t.equals(t.context.controller.process, null)
-    })
-
-    t.test('should be rejected when engine unexpectedly crashes', async t => {
-        t.rejects(t.context.controller.sendCommand({name: 'longwait'}))
-        t.context.controller.kill()
     })
 
     t.test('should ignore engine output lines outside responses', async t => {
