@@ -34,7 +34,7 @@ testEngine.command('enableundo', (_, out) => {
 })
 
 testEngine.command('play', (command, out) => {
-    if (command.args.length === 0) return out.err('player not specified')
+    if (command.args.length < 2) return out.err('not enough arguments')
     out.send('playing for ' + command.args[0])
 })
 

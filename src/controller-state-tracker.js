@@ -139,8 +139,6 @@ class ControllerStateTracker {
         if (state.boardsize != null && state.boardsize !== this.state.boardsize) {
             let {error} = await controller.sendCommand({name: 'boardsize', args: [state.boardsize]})
             if (error) throw new Error('Board size is not supported by engine')
-
-            this.state.history = null
         }
 
         // Update history
