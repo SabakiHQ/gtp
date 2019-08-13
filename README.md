@@ -113,7 +113,7 @@ Returns a GTP response string represented by `response`, something that an engin
 
 ### `StreamController`
 
-`SteamController` extends [`EventEmitter`](https://nodejs.org/api/events.html). Use this class to control GTP engines on arbitrary communication channels. To spawn engine processes automatically, use [`Controller`](#controller).
+`StreamController` extends [`EventEmitter`](https://nodejs.org/api/events.html). Use this class to control GTP engines on arbitrary communication channels. To spawn engine processes automatically, use [`Controller`](#controller).
 
 #### `new StreamController(input, output)`
 
@@ -264,7 +264,7 @@ The state of an engine is represented by an object of the following structure:
 {
     komi: <Number | null>,
     boardsize: <Number | null>,
-    history: <Array<Command> | null>
+    history: <Command[] | null>
 }
 ~~~
 
