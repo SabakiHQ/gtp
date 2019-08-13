@@ -35,7 +35,7 @@ class ControllerStateTracker {
             // Track engine state
 
             let res = null
-            let isGenmoveAnalyzeCommand = command.name.match(/^(\w+-)?genmove_analyze$/)
+            let isGenmoveAnalyzeCommand = !!command.name.match(/^(\w+-)?genmove_analyze$/)
 
             if (!isGenmoveAnalyzeCommand) {
                 try {
@@ -46,53 +46,57 @@ class ControllerStateTracker {
                 }
             }
 
-            if (command.name === 'list_commands') {
-                this._commands = res.content.split('\n').map(x => x.trim())
-            } else if (command.name === 'boardsize' && command.args.length >= 1) {
-                this.state.boardsize = +command.args[0]
-                this.state.history = null
-            } else if (command.name === 'clear_board') {
-                this.state.history = []
-            } else if (command.name === 'komi' && command.args.length >= 1) {
-                this.state.komi = +command.args[0]
-            } else if (['fixed_handicap', 'place_free_handicap'].includes(command.name)) {
-                let vertices = res.content.trim().split(/\s+/).map(normalizeVertex)
+            try {
+                if (command.name === 'list_commands') {
+                    this._commands = res.content.split('\n').map(x => x.trim())
+                } else if (command.name === 'boardsize' && command.args.length >= 1) {
+                    this.state.boardsize = +command.args[0]
+                    this.state.history = null
+                } else if (command.name === 'clear_board') {
+                    this.state.history = []
+                } else if (command.name === 'komi' && command.args.length >= 1) {
+                    this.state.komi = +command.args[0]
+                } else if (['fixed_handicap', 'place_free_handicap'].includes(command.name)) {
+                    let vertices = res.content.trim().split(/\s+/).map(normalizeVertex)
 
-                this.state.history.push({name: 'set_free_handicap', args: vertices})
-            } else if (command.name === 'set_free_handicap') {
-                let vertices = command.args.map(normalizeVertex)
+                    this.state.history.push({name: 'set_free_handicap', args: vertices})
+                } else if (command.name === 'set_free_handicap') {
+                    let vertices = command.args.map(normalizeVertex)
 
-                this.state.history.push({name: 'set_free_handicap', args: vertices})
-            } else if (command.name === 'play' && command.args.length >= 2) {
-                let color = command.args[0].trim()[0].toUpperCase() === 'W' ? 'W' : 'B'
-                let vertex = normalizeVertex(command.args[1])
+                    this.state.history.push({name: 'set_free_handicap', args: vertices})
+                } else if (command.name === 'play' && command.args.length >= 2) {
+                    let color = command.args[0].trim()[0].toUpperCase() === 'W' ? 'W' : 'B'
+                    let vertex = normalizeVertex(command.args[1])
 
-                this.state.history.push({name: 'play', args: [color, vertex]})
-            } else if (
-                (command.name === 'genmove' || isGenmoveAnalyzeCommand)
-                && command.args.length >= 1
-            ) {
-                let color = command.args[0].trim()[0].toUpperCase() === 'W' ? 'W' : 'B'
-                let vertex = !isGenmoveAnalyzeCommand
-                    ? normalizeVertex(res.content)
-                    : await new Promise(resolve => {
-                        getResponse()
-                        .then(() => resolve(null))
-                        .catch(() => resolve(null))
+                    this.state.history.push({name: 'play', args: [color, vertex]})
+                } else if (
+                    (command.name === 'genmove' || isGenmoveAnalyzeCommand)
+                    && command.args.length >= 1
+                ) {
+                    let color = command.args[0].trim()[0].toUpperCase() === 'W' ? 'W' : 'B'
+                    let vertex = !isGenmoveAnalyzeCommand
+                        ? normalizeVertex(res.content)
+                        : await new Promise(resolve => {
+                            getResponse()
+                            .then(() => resolve(null))
+                            .catch(() => resolve(null))
 
-                        subscribe(({line}) => {
-                            let match = line.trim().match(/^play\s+(.*)$/)
-                            if (match) resolve(normalizeVertex(match[1]))
+                            subscribe(({line}) => {
+                                let match = line.trim().match(/^play\s+(.*)$/)
+                                if (match) resolve(normalizeVertex(match[1]))
+                            })
                         })
-                    })
 
-                if (vertex != null) this.state.history.push({name: 'play', args: [color, vertex]})
-            } else if (command.name === 'undo') {
-                this.state.history.length--
-            } else if (command.name === 'loadsgf') {
-                this.state.komi = null
-                this.state.boardsize = null
-                this.state.history = null
+                    if (vertex != null) this.state.history.push({name: 'play', args: [color, vertex]})
+                } else if (command.name === 'undo') {
+                    this.state.history.length--
+                } else if (command.name === 'loadsgf') {
+                    this.state.komi = null
+                    this.state.boardsize = null
+                    this.state.history = null
+                }
+            } catch (err) {
+                // Silently ignore
             }
         })
     }
@@ -112,12 +116,13 @@ class ControllerStateTracker {
 
         while (this._syncQueue.length > 0) {
             let entry = this._syncQueue.shift()
+            let eventName = `sync-finished-${entry.id}`
 
             try {
                 await this._sync(entry.state)
-                this._syncFinishedEmitter.emit('sync-finished', {id: entry.id})
+                this._syncFinishedEmitter.emit(eventName, {id: entry.id})
             } catch (err) {
-                this._syncFinishedEmitter.emit('sync-finished', {id: entry.id, error: err})
+                this._syncFinishedEmitter.emit(eventName, {id: entry.id, error: err})
             }
         }
 
@@ -193,16 +198,9 @@ class ControllerStateTracker {
         this._startProcessingSyncs()
 
         await new Promise((resolve, reject) => {
-            let listener = evt => {
-                if (evt.id === id) {
-                    this._syncFinishedEmitter.removeListener('sync-finished', listener)
-
-                    if (evt.error != null) reject(evt.error)
-                    else resolve()
-                }
-            }
-
-            this._syncFinishedEmitter.on('sync-finished', listener)
+            this._syncFinishedEmitter.once(`sync-finished-${id}`, evt => {
+                return evt.error != null ? reject(evt.error) : resolve()
+            })
         })
     }
 }
