@@ -1,6 +1,6 @@
 const EventEmitter = require('events')
 const Controller = require('./controller')
-const StreamController = require('./stream-controller')
+const StreamController = require('./StreamController')
 const {normalizeVertex, commandEquals} = require('./helper')
 
 const getDefaultState = () => ({

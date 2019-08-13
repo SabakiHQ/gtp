@@ -1,7 +1,7 @@
-exports.Command = require('./command')
-exports.Response = require('./response')
+exports.Command = require('./Command')
+exports.Response = require('./Response')
 
-exports.StreamController = require('./stream-controller')
-exports.Controller = require('./controller')
-exports.ControllerStateTracker = require('./controller-state-tracker')
-exports.Engine = require('./engine')
+exports.StreamController = require('./StreamController')
+exports.Controller = require('./Controller')
+exports.ControllerStateTracker = require('./ControllerStateTracker')
+exports.Engine = require('./Engine')
