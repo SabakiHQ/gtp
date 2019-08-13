@@ -1,20 +1,13 @@
 const EventEmitter = require('events')
 const Controller = require('./controller')
 const StreamController = require('./stream-controller')
+const {normalizeVertex, commandEquals} = require('./helper')
 
 const getDefaultState = () => ({
     komi: null,
     boardsize: null,
     history: []
 })
-
-const normalizeVertex = vertex => vertex.trim().toUpperCase()
-const commandEquals = (cmd1, cmd2) =>
-    cmd1.name === cmd2.name
-    && (
-        cmd1.args.length === cmd2.args.length
-        && cmd1.args.every((x, i) => x === cmd2.args[i])
-    )
 
 class ControllerStateTracker {
     constructor(controller) {

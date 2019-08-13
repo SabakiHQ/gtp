@@ -1,3 +1,12 @@
+exports.normalizeVertex = vertex => vertex.trim().toUpperCase()
+
+exports.commandEquals = (cmd1, cmd2) =>
+    cmd1.name === cmd2.name
+    && (
+        cmd1.args.length === cmd2.args.length
+        && cmd1.args.every((x, i) => x === cmd2.args[i])
+    )
+
 exports.lineSubscribe = function(readable, subscriber) {
     let buffer = ''
     let listener = data => {
