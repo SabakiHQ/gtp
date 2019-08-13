@@ -18,8 +18,8 @@ const commandEquals = (cmd1, cmd2) =>
 
 class ControllerStateTracker {
     constructor(controller) {
-        this.state = getDefaultState()
         this.controller = controller
+        this.state = getDefaultState()
         this.syncing = false
 
         this._counter = 0

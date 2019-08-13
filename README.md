@@ -59,7 +59,7 @@ testEngine.start()
 ~~~
 
 ## API
-### Command
+### `Command`
 
 A GTP command is represented by an object of the following form:
 
@@ -85,7 +85,7 @@ Returns a GTP command string represented by `command` to be sent to an engine.
 
 ---
 
-### Response
+### `Response`
 
 A response from a GTP engine is represented by an object of the following form:
 
@@ -111,7 +111,7 @@ Returns a GTP response string represented by `response`, something that an engin
 
 ---
 
-### StreamController
+### `StreamController`
 
 `SteamController` extends [`EventEmitter`](https://nodejs.org/api/events.html). Use this class to control GTP engines on arbitrary communication channels. To spawn engine processes automatically, use [`Controller`](#controller).
 
@@ -172,7 +172,7 @@ Cleans up listeners.
 
 ---
 
-### Controller
+### `Controller`
 
 `Controller` extends [`EventEmitter`](https://nodejs.org/api/events.html). Use this class to spawn GTP engine processes and control them over `stdin` and `stdout`.
 
@@ -252,7 +252,63 @@ See [corresponding function in `StreamController`](#async-streamcontrollersendco
 
 ---
 
-### Engine
+### `ControllerStateTracker`
+
+Use this class to keep track of the state of an engine. This class is also able to synchronize the state of an engine to a given state.
+
+#### `EngineState`
+
+The state of an engine is represented by an object of the following structure:
+
+~~~js
+{
+    komi: <Number | null>,
+    boardsize: <Number | null>,
+    history: <Array<Command> | null>
+}
+~~~
+
+Values will be `null` if we do not know the engine state. `history` is an array of `set_free_handicap` and `play` [commands](#command).
+
+#### `new ControllerStateTracker(controller)`
+
+- `controller` [`<StreamController>`](#streamcontroller) or [`<Controller>`](#controller)
+
+#### `ControllerStateTracker.fromStreamController(input, output)`
+
+Equivalent to `new ControllerStateTracker(new StreamController(input, output))`.
+
+#### `ControllerStateTracker.fromController(path[, args[, spawnOptions]])`
+
+Equivalent to `new ControllerStateTracker(new Controller(path, args, spawnOptions))`.
+
+#### `stateTracker.controller`
+
+[`<StreamController>`](#streamcontroller) or [`<Controller>`](#controller) - The controller of the engine that we're tracking the state of.
+
+#### `stateTracker.state`
+
+[`<EngineState>`](#enginestate) - The state of the engine controlled by [`stateTracker.controller`](#statetrackercontroller).
+
+#### `stateTracker.syncing`
+
+`<Boolean>` - Indicates whether the controller is performing a sync right now.
+
+#### `async stateTracker.knowsCommand(commandName)`
+
+- `commandName` `<String>`
+
+Returns a boolean whether the engine supports the given command.
+
+#### `async stateTracker.sync(state)`
+
+- `state` [`<EngineState>`](#enginestate)
+
+Tries to sync the engine to the given `state`. Omit keys or set values to `null` in the `state` object if you do not want to change the engine state for particular keys.
+
+---
+
+### `Engine`
 
 `Engine` extends [`EventEmitter`](https://nodejs.org/api/events.html). Use this class to create a GTP engine using the communication channels of your choice.
 
