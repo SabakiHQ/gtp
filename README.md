@@ -264,7 +264,7 @@ The state of an engine is represented by an object of the following structure:
 {
     komi: <Number | null>,
     boardsize: <Number | null>,
-    history: <Array<Command> | null>
+    history: <Command[] | null>
 }
 ~~~
 
