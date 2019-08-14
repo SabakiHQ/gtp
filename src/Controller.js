@@ -29,11 +29,14 @@ class Controller extends EventEmitter {
 
         this._streamController = null
         this.process = null
-        this.commands = []
     }
 
     get busy() {
         return this._streamController != null && this._streamController.busy
+    }
+
+    get commands() {
+        return this._streamController == null ? [] : this._streamController.commands
     }
 
     start() {
@@ -53,7 +56,6 @@ class Controller extends EventEmitter {
 
             this._streamController = null
             this.process = null
-            this.commands = []
 
             this.emit('stopped', {signal})
         })
@@ -61,8 +63,6 @@ class Controller extends EventEmitter {
         this._streamController = new StreamController(this.process.stdin, this.process.stdout)
         this._streamController.on('command-sent', evt => this.emit('command-sent', evt))
         this._streamController.on('response-received', evt => this.emit('response-received', evt))
-
-        this.commands = this._streamController.commands
 
         this.emit('started')
     }
