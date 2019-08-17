@@ -8,10 +8,16 @@ class StreamController extends EventEmitter {
 
         this._counter = 0
         this._responseLineEmitter = new EventEmitter()
-        this.commands = []
+        this._unlimitedEmitter = new EventEmitter()
+        this._unlimitedEmitter.setMaxListeners(Infinity)
 
+        this.commands = []
         this.input = input
         this.output = output
+
+        this.output.on('close', evt => {
+            this._unlimitedEmitter.emit('output-close', evt)
+        })
 
         this._unsubscribe = lineSubscribe(output, line => {
             if (this.commands.length > 0) {
@@ -53,10 +59,10 @@ class StreamController extends EventEmitter {
 
             let cleanUp = () => {
                 this._responseLineEmitter.removeAllListeners(eventName)
-                this.output.removeListener('close', handleClose)
+                this._unlimitedEmitter.removeListener('output-close', handleClose)
             }
 
-            this.output.once('close', handleClose)
+            this._unlimitedEmitter.once('output-close', handleClose)
 
             this._responseLineEmitter.on(eventName, ({line, end}) => {
                 if (firstLine && (line.length === 0 || !'=?'.includes(line[0]))) {
