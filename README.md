@@ -381,7 +381,7 @@ Sets a handler for the given command. `handler` will be called with the followin
     - `write(content)` - Writes given content to response.
     - `end()` - When using `write`, use this method to indicate end of response.
 
-`handler` can be an `async` function or return a `Promise`. In this case, you don't need to call `out.end()` explicitely.
+`handler` can be an `async` function or return a `Promise`. In this case, you don't need to call `out.end()` explicitly.
 
 You can also pass a string as `handler` to immediately return a response.
 
