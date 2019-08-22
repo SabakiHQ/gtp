@@ -79,7 +79,9 @@ class ControllerStateTracker {
                             })
                         })
 
-                    if (vertex != null) this.state.history.push({name: 'play', args: [color, vertex]})
+                    if (vertex != 'RESIGN') {
+                        this.state.history.push({name: 'play', args: [color, vertex]})
+                    }
                 } else if (command.name === 'undo') {
                     this.state.history.length--
                 } else if (command.name === 'loadsgf') {
