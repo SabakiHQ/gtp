@@ -129,14 +129,14 @@ class ControllerStateTracker {
         // Update komi
 
         if (state.komi != null && state.komi !== this.state.komi) {
-            let {error} = await controller.sendCommand({name: 'komi', args: [state.komi]})
+            let {error} = await controller.sendCommand({name: 'komi', args: [`${state.komi}`]})
             if (error) throw new Error('Komi is not supported by engine')
         }
 
         // Update boardsize
 
         if (state.boardsize != null && state.boardsize !== this.state.boardsize) {
-            let {error} = await controller.sendCommand({name: 'boardsize', args: [state.boardsize]})
+            let {error} = await controller.sendCommand({name: 'boardsize', args: [`${state.boardsize}`]})
             if (error) throw new Error('Board size is not supported by engine')
         }
 
