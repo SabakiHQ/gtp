@@ -151,6 +151,10 @@ class ControllerStateTracker {
                     || !commandEquals(commands[i], this.state.history[i])
                 )
             let undoLength = (this.state.history || []).length - sharedHistoryLength
+            let commandSuccessful = command =>
+                controller.sendCommand(command)
+                .then(res => !res.error)
+                .catch(_ => false)
 
             if (
                 this.state.history != null
@@ -160,22 +164,25 @@ class ControllerStateTracker {
             ) {
                 // Undo until shared history is reached, then play out rest
 
-                commands = [
+                let undoCommands = [
                     ...[...Array(undoLength)].map(() => ({name: 'undo'})),
                     ...commands.slice(sharedHistoryLength)
                 ]
-            } else {
-                // Replay from beginning
 
-                commands.unshift({name: 'clear_board'})
+                let result = await Promise.all(
+                    undoCommands.map(commandSuccessful)
+                )
+
+                let success = result.every(x => x)
+                if (success) return
             }
 
+            // Replay from beginning
+
+            commands.unshift({name: 'clear_board'})
+
             let result = await Promise.all(
-                commands.map(command =>
-                    controller.sendCommand(command)
-                    .then(res => !res.error)
-                    .catch(_ => false)
-                )
+                commands.map(commandSuccessful)
             )
 
             let success = result.every(x => x)

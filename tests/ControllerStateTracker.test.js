@@ -159,6 +159,29 @@ t.test('sync history state', async t => {
         t.deepEquals(stateTracker.state.history, newCommands)
     })
 
+    t.test('history changing sync with failing undo', async t => {
+        let {stateTracker} = t.context
+        await stateTracker.controller.sendCommand({name: 'enableundo', args: ['error']})
+
+        let commands = [
+            {name: 'set_free_handicap', args: ['F4', 'G4', 'H4']},
+            {name: 'play', args: ['B', 'D4']},
+            {name: 'play', args: ['W', 'E4']}
+        ]
+
+        await stateTracker.sync({history: commands})
+        t.deepEquals(stateTracker.state.history, commands)
+
+        let newCommands = [
+            ...commands.slice(0, -1),
+            {name: 'play', args: ['W', 'B4']},
+            {name: 'play', args: ['B', 'A4']}
+        ]
+
+        await stateTracker.sync({history: newCommands})
+        t.deepEquals(stateTracker.state.history, newCommands)
+    })
+
     t.test('history changing sync with undo', async t => {
         let {stateTracker} = t.context
         await stateTracker.controller.sendCommand({name: 'enableundo'})

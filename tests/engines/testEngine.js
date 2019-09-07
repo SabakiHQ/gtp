@@ -27,8 +27,10 @@ for (let commandName of [
     testEngine.command(commandName, (_, out) => out.send())
 }
 
-testEngine.command('enableundo', (_, out) => {
-    testEngine.command('undo', (_, out) => out.send())
+testEngine.command('enableundo', (command, out) => {
+    testEngine.command('undo', (_, out) =>
+        command.args[0] === 'error' ? out.err('cannot undo') : out.send()
+    )
 
     out.send('undo command enabled')
 })
