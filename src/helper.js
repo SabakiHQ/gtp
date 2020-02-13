@@ -4,7 +4,9 @@ exports.commandEquals = (cmd1, cmd2) =>
     cmd1.name === cmd2.name
     && (
         cmd1.args.length === cmd2.args.length
-        && cmd1.args.every((x, i) => x === cmd2.args[i])
+        && cmd1.args.every((x, i) =>
+            x.toUpperCase() === cmd2.args[i].toUpperCase()
+        )
     )
 
 exports.lineSubscribe = function(readable, subscriber) {
