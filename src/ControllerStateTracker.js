@@ -1,6 +1,15 @@
 const EventEmitter = require('events')
 const {StreamController, Controller} = require('./main')
-const {normalizeVertex, commandEquals} = require('./helper')
+const {normalizeVertex} = require('./helper')
+
+const commandEquals = (cmd1, cmd2) =>
+    cmd1.name === cmd2.name
+    && (
+        cmd1.args.length === cmd2.args.length
+        && cmd1.args.every((x, i) =>
+            normalizeVertex(x) === normalizeVertex(cmd2.args[i])
+        )
+    )
 
 const getDefaultState = () => ({
     komi: null,
