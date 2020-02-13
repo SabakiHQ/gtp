@@ -1,7 +1,7 @@
 /* istanbul ignore file */
 
 const EventEmitter = require('events')
-const {lineSubscribe} = require('./helper')
+const {lineSubscribe} = require('../helper')
 
 module.exports = (() => {
     try {

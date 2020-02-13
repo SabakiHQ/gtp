@@ -1,5 +1,5 @@
 const EventEmitter = require('events')
-const readline = require('./readline')
+const readline = require('./ponyfills/readline')
 const {Command, Response} = require('./main')
 
 module.exports = class Engine extends EventEmitter {

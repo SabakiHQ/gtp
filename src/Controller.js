@@ -1,5 +1,5 @@
 const EventEmitter = require('events')
-const {spawn, exec} = require('./child_process')
+const {spawn, exec} = require('./ponyfills/child_process')
 const {StreamController} = require('./main')
 const {lineSubscribe} = require('./helper')
 
