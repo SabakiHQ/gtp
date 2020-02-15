@@ -102,7 +102,7 @@ class StreamController extends EventEmitter {
             command,
             subscribe: f => {
                 let g = subscriber
-                subscriber = x => (f(x), g(x))
+                subscriber = x => (g(x), f(x))
             },
             getResponse: () => promise
         })
