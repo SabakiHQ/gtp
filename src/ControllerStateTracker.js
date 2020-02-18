@@ -101,7 +101,7 @@ class ControllerStateTracker {
                 })
               })
 
-          if (vertex != 'RESIGN') {
+          if (vertex !== 'RESIGN') {
             this.state.history.push({name: 'play', args: [color, vertex]})
           }
         } else if (command.name === 'undo') {
@@ -166,16 +166,17 @@ class ControllerStateTracker {
         state.boardsize[0] !== this.state.boardsize[0] ||
         state.boardsize[1] !== this.state.boardsize[1])
     ) {
-      let response =
+      let response = await controller.sendCommand(
         state.boardsize[0] === state.boardsize[1]
-          ? await controller.sendCommand({
+          ? {
               name: 'boardsize',
               args: [`${state.boardsize[0]}`]
-            })
-          : await controller.sendCommand({
+            }
+          : {
               name: 'rectangular_boardsize',
               args: state.boardsize.map(x => `${x}`)
-            })
+            }
+      )
 
       if (response.error)
         throw new Error('Board size is not supported by engine')
@@ -189,10 +190,7 @@ class ControllerStateTracker {
         (this.state.history || []).length,
         commands.length
       )
-      let sharedHistoryLength = [
-        ...Array(maxSharedHistoryLength),
-        null
-      ].findIndex(
+      let sharedHistoryLength = Array(maxSharedHistoryLength + 1).findIndex(
         (_, i) =>
           i === maxSharedHistoryLength ||
           !commandEquals(commands[i], this.state.history[i])
@@ -213,7 +211,7 @@ class ControllerStateTracker {
         // Undo until shared history is reached, then play out rest
 
         let undoCommands = [
-          ...[...Array(undoLength)].map(() => ({name: 'undo'})),
+          ...Array(undoLength).fill({name: 'undo'}),
           ...commands.slice(sharedHistoryLength)
         ]
 
