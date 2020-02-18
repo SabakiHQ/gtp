@@ -4,7 +4,9 @@
   "description": "A Node.js module for handling GTP engines.",
   "main": "./src/main.js",
   "scripts": {
-    "test": "tap tests/*.test.js"
+    "test": "tap tests/*.test.js",
+    "format": "prettier **/*.{js,md} --write",
+    "format-watch": "onchange \"**/*.{js,md}\" -- prettier --write {{changed}}"
   },
   "repository": {
     "type": "git",
@@ -25,7 +27,15 @@
     "url": "https://github.com/SabakiHQ/gtp/issues"
   },
   "homepage": "https://github.com/SabakiHQ/gtp",
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "bracketSpacing": false,
+    "proseWrap": "always"
+  },
   "devDependencies": {
+    "onchange": "^6.1.0",
+    "prettier": "1.19.1",
     "tap": "^14.10.6"
   }
 }
