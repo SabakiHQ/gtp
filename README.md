@@ -114,9 +114,8 @@ engine might send.
 
 ---
 
-### `StreamController`
+### `class StreamController extends EventEmitter`
 
-`StreamController` extends [`EventEmitter`](https://nodejs.org/api/events.html).
 Use this class to control GTP engines on arbitrary communication channels. To
 spawn engine processes automatically, use [`Controller`](#controller).
 
@@ -180,8 +179,8 @@ properties:
 - `line` `<String>` - The contents of the incoming line.
 - `end` `<Boolean>` - `true` if incoming line is the last line of response.
 - `command` [`<Command>`](#command) - The command to which the response belongs.
-- `response` [`<Response>`](#response) - The partial response until the incoming
-  line with all the previous lines.
+- `response` [`<Response>`](#response) - The partial response until now,
+  including the incoming line with all the previous lines.
 
 #### `streamController.close()`
 
@@ -189,10 +188,9 @@ Cleans up listeners.
 
 ---
 
-### `Controller`
+### `class Controller extends EventEmitter`
 
-`Controller` extends [`EventEmitter`](https://nodejs.org/api/events.html). Use
-this class to spawn GTP engine processes and control them over `stdin` and
+Use this class to spawn GTP engine processes and control them over `stdin` and
 `stdout`.
 
 #### `new Controller(path[, args[, spawnOptions]])`
@@ -262,7 +260,7 @@ Spawns a process of the engine if necessary.
 
 #### `async controller.stop([timeout])`
 
-- `timeout` `<Number>` _(optional)_ - Default: `3000`
+- `timeout` `<number>` _(optional)_ - Default: `3000`
 
 Sends a `quit` command to the engine. If engine doesn't respond, it will be
 killed after `timeout` ms.
@@ -278,7 +276,7 @@ See
 
 ---
 
-### `ControllerStateTracker`
+### `class ControllerStateTracker`
 
 Use this class to keep track of the state of an engine. This class is also able
 to synchronize the state of an engine to a given state.
@@ -289,8 +287,8 @@ The state of an engine is represented by an object of the following structure:
 
 ```js
 {
-  komi: <Number | null>,
-  boardsize: <[Number, Number] | null>,
+  komi: <number | null>,
+  boardsize: <[number, number] | null>,
   history: <Command[] | null>
 }
 ```
@@ -342,10 +340,10 @@ particular keys.
 
 ---
 
-### `Engine`
+### `class Engine extends EventEmitter`
 
-`Engine` extends [`EventEmitter`](https://nodejs.org/api/events.html). Use this
-class to create a GTP engine using the communication channels of your choice.
+Use this class to create a GTP engine using the communication channels of your
+choice.
 
 #### `new Engine([name[, version]])`
 
