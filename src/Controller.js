@@ -3,25 +3,6 @@ const {spawn, exec} = require('./ponyfills/child_process')
 const {StreamController} = require('./main')
 const {lineSubscribe} = require('./helper')
 
-// System paths are not inherited in macOS
-// This is a quick & dirty fix
-
-/* istanbul ignore if */
-if (process.platform === 'darwin') {
-  exec('/bin/bash -ilc "env; exit"', (err, result) => {
-    if (err) return
-
-    let [_, path] =
-      result
-        .trim()
-        .split('\n')
-        .map(x => x.split('='))
-        .find(x => x[0] === 'PATH') || []
-
-    if (path != null) process.env.PATH = path
-  })
-}
-
 class Controller extends EventEmitter {
   constructor(path, args = [], spawnOptions = {}) {
     super()
