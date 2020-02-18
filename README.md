@@ -293,8 +293,9 @@ The state of an engine is represented by an object of the following structure:
 }
 ```
 
-Values will be `null` if we do not know the engine state. `history` is an array
-of `set_free_handicap` and `play` [commands](#command).
+- Values will be `null` if we do not know the engine state.
+- `boardsize` contains the width and height of the board.
+- `history` is an array of `set_free_handicap` and `play` [commands](#command).
 
 #### `new ControllerStateTracker(controller)`
 
