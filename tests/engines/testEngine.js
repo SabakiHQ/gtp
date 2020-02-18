@@ -19,6 +19,7 @@ testEngine.command('delay', (_, out) => {
 for (let commandName of [
   'clear_board',
   'boardsize',
+  'rectangular_boardsize',
   'komi',
   'set_free_handicap',
   'loadsgf'

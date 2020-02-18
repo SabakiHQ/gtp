@@ -36,12 +36,12 @@ t.test('parallel syncing', async t => {
 
   await Promise.all([
     stateTracker.sync({komi: 8}),
-    stateTracker.sync({boardsize: 18, history: []})
+    stateTracker.sync({boardsize: [18, 18], history: []})
   ])
 
   t.deepEquals(stateTracker.state, {
     komi: 8,
-    boardsize: 18,
+    boardsize: [18, 18],
     history: []
   })
 })
@@ -76,14 +76,36 @@ t.test('sync boardsize state', async t => {
   t.equals(stateTracker.state.boardsize, null)
   t.notEquals(stateTracker.state.history, null)
 
-  await stateTracker.sync({boardsize: 13})
+  await stateTracker.sync({boardsize: [13, 13]})
 
-  t.equals(stateTracker.state.boardsize, 13)
+  t.strictDeepEquals(stateTracker.state.boardsize, [13, 13])
   t.equals(stateTracker.state.history, null)
 
   await stateTracker.controller.sendCommand({name: 'boardsize', args: ['21']})
 
-  t.equals(stateTracker.state.boardsize, 21)
+  t.strictDeepEquals(stateTracker.state.boardsize, [21, 21])
+  t.equals(stateTracker.state.history, null)
+})
+
+t.test('sync rectangular boardsize state', async t => {
+  let {stateTracker} = t.context
+
+  await stateTracker.controller.sendCommand({name: 'play', args: ['B', 'D4']})
+
+  t.equals(stateTracker.state.boardsize, null)
+  t.notEquals(stateTracker.state.history, null)
+
+  await stateTracker.sync({boardsize: [13, 15]})
+
+  t.strictDeepEquals(stateTracker.state.boardsize, [13, 15])
+  t.equals(stateTracker.state.history, null)
+
+  await stateTracker.controller.sendCommand({
+    name: 'rectangular_boardsize',
+    args: ['21', '10']
+  })
+
+  t.strictDeepEquals(stateTracker.state.boardsize, [21, 10])
   t.equals(stateTracker.state.history, null)
 })
 

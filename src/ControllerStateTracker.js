@@ -5,9 +5,9 @@ const {normalizeVertex} = require('./helper')
 const commandEquals = (cmd1, cmd2) =>
   cmd1.name === cmd2.name &&
   cmd1.args.length === cmd2.args.length &&
-    cmd1.args.every(
-      (x, i) => normalizeVertex(x) === normalizeVertex(cmd2.args[i])
-    )
+  cmd1.args.every(
+    (x, i) => normalizeVertex(x) === normalizeVertex(cmd2.args[i])
+  )
 
 const getDefaultState = () => ({
   komi: null,
@@ -51,7 +51,13 @@ class ControllerStateTracker {
         if (command.name === 'list_commands') {
           this._commands = res.content.split('\n').map(x => x.trim())
         } else if (command.name === 'boardsize' && command.args.length >= 1) {
-          this.state.boardsize = +command.args[0]
+          this.state.boardsize = Array(2).fill(+command.args[0])
+          this.state.history = null
+        } else if (
+          command.name === 'rectangular_boardsize' &&
+          command.args.length >= 2
+        ) {
+          this.state.boardsize = command.args.slice(0, 2).map(x => +x)
           this.state.history = null
         } else if (command.name === 'clear_board') {
           this.state.history = []
@@ -154,12 +160,25 @@ class ControllerStateTracker {
 
     // Update boardsize
 
-    if (state.boardsize != null && state.boardsize !== this.state.boardsize) {
-      let {error} = await controller.sendCommand({
-        name: 'boardsize',
-        args: [`${state.boardsize}`]
-      })
-      if (error) throw new Error('Board size is not supported by engine')
+    if (
+      state.boardsize != null &&
+      (this.state.boardsize == null ||
+        state.boardsize[0] !== this.state.boardsize[0] ||
+        state.boardsize[1] !== this.state.boardsize[1])
+    ) {
+      let response =
+        state.boardsize[0] === state.boardsize[1]
+          ? await controller.sendCommand({
+              name: 'boardsize',
+              args: [`${state.boardsize[0]}`]
+            })
+          : await controller.sendCommand({
+              name: 'rectangular_boardsize',
+              args: state.boardsize.map(x => `${x}`)
+            })
+
+      if (response.error)
+        throw new Error('Board size is not supported by engine')
     }
 
     // Update history
