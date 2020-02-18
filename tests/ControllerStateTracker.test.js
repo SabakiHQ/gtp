@@ -39,7 +39,7 @@ t.test('parallel syncing', async t => {
     stateTracker.sync({boardsize: [18, 18], history: []})
   ])
 
-  t.deepEquals(stateTracker.state, {
+  t.strictDeepEquals(stateTracker.state, {
     komi: 8,
     boardsize: [18, 18],
     history: []
@@ -121,13 +121,13 @@ t.test('sync history state', async t => {
     await Promise.all(
       commands.map(command => stateTracker.controller.sendCommand(command))
     )
-    t.deepEquals(stateTracker.state.history, commands)
+    t.strictDeepEquals(stateTracker.state.history, commands)
 
     await stateTracker.controller.sendCommand({name: 'clear_board'})
-    t.deepEquals(stateTracker.state.history, [])
+    t.strictDeepEquals(stateTracker.state.history, [])
 
     await stateTracker.sync({history: commands})
-    t.deepEquals(stateTracker.state.history, commands)
+    t.strictDeepEquals(stateTracker.state.history, commands)
   })
 
   t.test('sync genmove commands', async t => {
@@ -167,7 +167,7 @@ t.test('sync history state', async t => {
       ]
     })
 
-    t.deepEquals(stateTracker.state.history, history)
+    t.strictDeepEquals(stateTracker.state.history, history)
   })
 
   t.test('push history', async t => {
@@ -179,7 +179,7 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: commands})
-    t.deepEquals(stateTracker.state.history, commands)
+    t.strictDeepEquals(stateTracker.state.history, commands)
 
     let newCommands = [
       ...commands,
@@ -188,7 +188,7 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: newCommands})
-    t.deepEquals(stateTracker.state.history, newCommands)
+    t.strictDeepEquals(stateTracker.state.history, newCommands)
   })
 
   t.test('history changing sync without undo', async t => {
@@ -200,7 +200,7 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: commands})
-    t.deepEquals(stateTracker.state.history, commands)
+    t.strictDeepEquals(stateTracker.state.history, commands)
 
     let newCommands = [
       ...commands.slice(0, -1),
@@ -209,7 +209,7 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: newCommands})
-    t.deepEquals(stateTracker.state.history, newCommands)
+    t.strictDeepEquals(stateTracker.state.history, newCommands)
   })
 
   t.test('history changing sync with failing undo', async t => {
@@ -226,7 +226,7 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: commands})
-    t.deepEquals(stateTracker.state.history, commands)
+    t.strictDeepEquals(stateTracker.state.history, commands)
 
     let newCommands = [
       ...commands.slice(0, -1),
@@ -235,7 +235,7 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: newCommands})
-    t.deepEquals(stateTracker.state.history, newCommands)
+    t.strictDeepEquals(stateTracker.state.history, newCommands)
   })
 
   t.test('history changing sync with undo', async t => {
@@ -249,7 +249,7 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: commands})
-    t.deepEquals(stateTracker.state.history, commands)
+    t.strictDeepEquals(stateTracker.state.history, commands)
 
     let newCommands = [
       ...commands.slice(0, -1),
@@ -258,7 +258,7 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: newCommands})
-    t.deepEquals(stateTracker.state.history, newCommands)
+    t.strictDeepEquals(stateTracker.state.history, newCommands)
     t.assert(t.context.input.includes('undo\n'))
   })
 
@@ -271,12 +271,12 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: commands})
-    t.deepEquals(stateTracker.state.history, commands)
+    t.strictDeepEquals(stateTracker.state.history, commands)
 
     await stateTracker.controller.sendCommand({name: 'loadsgf'})
     t.equals(stateTracker.state.history, null)
 
     await stateTracker.sync({history: commands})
-    t.deepEquals(stateTracker.state.history, commands)
+    t.strictDeepEquals(stateTracker.state.history, commands)
   })
 })
