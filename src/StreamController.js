@@ -22,7 +22,7 @@ class StreamController extends EventEmitter {
     this._unsubscribe = lineSubscribe(output, line => {
       if (this.commands.length > 0) {
         let end = line === ''
-        let {_internalId} = !end ? this.commands[0] : this.commands.shift()
+        let {_internalId} = this.commands[0]
 
         this._responseLineEmitter.emit(`response-${_internalId}`, {line, end})
       }
@@ -79,9 +79,10 @@ class StreamController extends EventEmitter {
         if (end) {
           content = ''
 
+          this.commands.shift()
           cleanUp()
-          resolve(response)
 
+          resolve(response)
           this.emit('response-received', {
             command,
             response
