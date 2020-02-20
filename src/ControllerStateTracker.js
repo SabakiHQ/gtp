@@ -125,6 +125,16 @@ class ControllerStateTracker {
     return this._commands.includes(commandName)
   }
 
+  async queueCommand(...args) {
+    if (this.syncing) {
+      await new Promise(r =>
+        this._syncFinishedEmitter.once('syncs-finished', r)
+      )
+    }
+
+    return this.controller.sendCommand(...args)
+  }
+
   async _startProcessingSyncs() {
     if (this.syncing) return
 
@@ -143,6 +153,7 @@ class ControllerStateTracker {
     }
 
     this.syncing = false
+    this._syncFinishedEmitter.emit('syncs-finished')
   }
 
   async _sync(state) {

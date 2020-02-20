@@ -130,6 +130,31 @@ t.test('sync history state', async t => {
     t.strictDeepEquals(stateTracker.state.history, commands)
   })
 
+  t.test('queueCommand will send command after syncs are done', async t => {
+    let {stateTracker} = t.context
+    let commands = [
+      {name: 'set_free_handicap', args: ['F4', 'G4', 'H4']},
+      {name: 'play', args: ['B', 'D4']},
+      {name: 'play', args: ['W', 'E4']}
+    ]
+
+    let sentCommands = []
+
+    stateTracker.controller.on('command-sent', ({command}) => {
+      sentCommands.push(command)
+    })
+
+    let queuedCommand = {name: 'genmove', args: ['B']}
+
+    await Promise.all([
+      stateTracker.sync({history: commands}),
+      stateTracker.sync({history: commands}),
+      stateTracker.queueCommand(queuedCommand)
+    ])
+
+    t.strictDeepEquals(sentCommands.slice(-1)[0], queuedCommand)
+  })
+
   t.test('sync genmove commands', async t => {
     let {stateTracker} = t.context
     let history = []

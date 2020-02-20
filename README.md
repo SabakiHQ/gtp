@@ -331,6 +331,12 @@ controller of the engine that we're tracking the state of.
 
 Returns a boolean whether the engine supports the given command.
 
+#### `async stateTracker.queueCommand(command)`
+
+- `command` [`<Command>`](#command)
+
+Sends the given command to the engine after all ongoing syncs have finished.
+
 #### `async stateTracker.sync(state)`
 
 - `state` [`<EngineState>`](#enginestate)
