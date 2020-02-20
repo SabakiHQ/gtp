@@ -137,8 +137,11 @@ class ControllerStateTracker {
 
   async _startProcessingSyncs() {
     if (this.syncing) return
-
     this.syncing = true
+
+    while (this.controller.busy) {
+      await new Promise(r => this.controller.once('response-received', r))
+    }
 
     while (this._syncQueue.length > 0) {
       let entry = this._syncQueue.shift()
