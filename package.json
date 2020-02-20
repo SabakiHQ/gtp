@@ -1,6 +1,6 @@
 {
   "name": "@sabaki/gtp",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "A Node.js module for handling GTP engines.",
   "main": "./src/main.js",
   "scripts": {
