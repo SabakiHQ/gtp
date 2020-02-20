@@ -6,7 +6,8 @@
   "scripts": {
     "test": "tap tests/*.test.js",
     "format": "prettier **/*.{js,md} --write",
-    "format-watch": "onchange \"**/*.{js,md}\" -- prettier --write {{changed}}"
+    "format-watch": "onchange \"**/*.{js,md}\" -- prettier --write {{changed}}",
+    "publish": "git push && git push --tags && npm publish"
   },
   "repository": {
     "type": "git",
