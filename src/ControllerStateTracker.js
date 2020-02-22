@@ -138,13 +138,13 @@ class ControllerStateTracker {
   async _addToQueue(item) {
     let id = this._counter++
 
-    this._queue.push({...item, id})
-    this._startProcessingQueue()
-
-    await new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       this._queueItemFinishedEmitter.once(`item-finished-${id}`, evt => {
         return evt.error != null ? reject(evt.error) : resolve(evt.result)
       })
+
+      this._queue.push({...item, id})
+      this._startProcessingQueue()
     })
   }
 
@@ -153,24 +153,21 @@ class ControllerStateTracker {
     this.syncing = true
 
     while (this._queue.length > 0) {
-      let entry = this._queue.shift()
-      let eventName = `item-finished-${entry.id}`
+      let {type, id, args} = this._queue.shift()
+      let eventName = `item-finished-${id}`
 
       try {
         let result
 
-        if (entry.type === 'sync') {
-          result = await this._sync(...entry.args)
-        } else if (entry.type === 'command') {
-          result = await this.controller.sendCommand(...entry.args)
+        if (type === 'sync') {
+          result = await this._sync(...args)
+        } else if (type === 'command') {
+          result = await this.controller.sendCommand(...args)
         }
 
-        this._queueItemFinishedEmitter.emit(eventName, {id: entry.id, result})
+        this._queueItemFinishedEmitter.emit(eventName, {id, result})
       } catch (err) {
-        this._queueItemFinishedEmitter.emit(eventName, {
-          id: entry.id,
-          error: err
-        })
+        this._queueItemFinishedEmitter.emit(eventName, {id, error: err})
       }
     }
 

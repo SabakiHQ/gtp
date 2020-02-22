@@ -6,7 +6,7 @@
  */
 'use strict'
 exports[
-  `ControllerStateTracker.test.js TAP sync history state queueCommand will send command after syncs are done > must match snapshot 1`
+  `ControllerStateTracker.test.js TAP queueCommand will send command after syncs are done > must match snapshot 1`
 ] = `
 Array [
   Object {
@@ -47,29 +47,7 @@ Array [
   },
   Object {
     "args": Array [],
-    "name": "clear_board",
-  },
-  Object {
-    "args": Array [
-      "F4",
-      "G4",
-      "H4",
-    ],
-    "name": "set_free_handicap",
-  },
-  Object {
-    "args": Array [
-      "B",
-      "D4",
-    ],
-    "name": "play",
-  },
-  Object {
-    "args": Array [
-      "W",
-      "E4",
-    ],
-    "name": "play",
+    "name": "undo",
   },
 ]
 `

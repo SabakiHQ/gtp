@@ -340,7 +340,8 @@ Returns a boolean whether the engine supports the given command.
 
 - `command` [`<Command>`](#command)
 
-Sends the given command to the engine after all ongoing syncs have finished.
+Sends the given command to the engine after all ongoing syncs have finished and
+returns the response.
 
 #### `async stateTracker.sync(state)`
 

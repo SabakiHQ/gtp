@@ -153,29 +153,6 @@ t.test('sync history state', async t => {
     t.strictDeepEquals(stateTracker.state.history, commands)
   })
 
-  t.test('queueCommand will send command after syncs are done', async t => {
-    let {stateTracker} = t.context
-    let commands = [
-      {name: 'set_free_handicap', args: ['F4', 'G4', 'H4']},
-      {name: 'play', args: ['B', 'D4']},
-      {name: 'play', args: ['W', 'E4']}
-    ]
-
-    let sentCommands = []
-
-    stateTracker.controller.on('command-sent', ({command}) => {
-      sentCommands.push(command)
-    })
-
-    await Promise.all([
-      stateTracker.sync({history: commands}),
-      stateTracker.queueCommand({name: 'genmove', args: ['B']}),
-      stateTracker.sync({history: commands})
-    ])
-
-    t.matchSnapshot(sentCommands)
-  })
-
   t.test('sync genmove commands', async t => {
     let {stateTracker} = t.context
     let history = []
@@ -325,4 +302,28 @@ t.test('sync history state', async t => {
     await stateTracker.sync({history: commands})
     t.strictDeepEquals(stateTracker.state.history, commands)
   })
+})
+
+t.test('queueCommand will send command after syncs are done', async t => {
+  let {stateTracker} = t.context
+  let commands = [
+    {name: 'set_free_handicap', args: ['F4', 'G4', 'H4']},
+    {name: 'play', args: ['B', 'D4']},
+    {name: 'play', args: ['W', 'E4']}
+  ]
+
+  let sentCommands = []
+
+  stateTracker.controller.on('command-sent', ({command}) => {
+    sentCommands.push(command)
+  })
+
+  let responses = await Promise.all([
+    stateTracker.sync({history: commands}),
+    stateTracker.queueCommand({name: 'genmove', args: ['B']}),
+    stateTracker.sync({history: commands})
+  ])
+
+  t.assert(responses[1] != null)
+  t.matchSnapshot(sentCommands)
 })
