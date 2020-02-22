@@ -144,15 +144,13 @@ t.test('sync history state', async t => {
       sentCommands.push(command)
     })
 
-    let queuedCommand = {name: 'genmove', args: ['B']}
-
     await Promise.all([
       stateTracker.sync({history: commands}),
-      stateTracker.sync({history: commands}),
-      stateTracker.queueCommand(queuedCommand)
+      stateTracker.queueCommand({name: 'genmove', args: ['B']}),
+      stateTracker.sync({history: commands})
     ])
 
-    t.strictDeepEquals(sentCommands.slice(-1)[0], queuedCommand)
+    t.matchSnapshot(sentCommands)
   })
 
   t.test('sync genmove commands', async t => {

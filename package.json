@@ -4,7 +4,7 @@
   "description": "A Node.js module for handling GTP engines.",
   "main": "./src/main.js",
   "scripts": {
-    "test": "tap tests/*.test.js",
+    "test": "cd tests && tap *.test.js",
     "format": "prettier **/*.{js,md} --write",
     "format-watch": "onchange \"**/*.{js,md}\" -- prettier --write {{changed}}",
     "publish": "git push && git push --tags && npm publish"
