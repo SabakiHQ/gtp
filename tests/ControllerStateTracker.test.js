@@ -31,7 +31,7 @@ t.test('knowsCommand', async t => {
   t.equals(await stateTracker.knowsCommand('version'), true)
 })
 
-t.test('parallel syncing', async t => {
+t.test('handle parallel syncing sequentially', async t => {
   let {stateTracker} = t.context
 
   await Promise.all([
@@ -42,6 +42,7 @@ t.test('parallel syncing', async t => {
   t.strictDeepEquals(stateTracker.state, {
     komi: 8,
     boardsize: [18, 18],
+    timeSettings: null,
     history: []
   })
 })
@@ -107,6 +108,28 @@ t.test('sync rectangular boardsize state', async t => {
 
   t.strictDeepEquals(stateTracker.state.boardsize, [21, 10])
   t.equals(stateTracker.state.history, null)
+})
+
+t.test('sync time settings', async t => {
+  let {stateTracker} = t.context
+
+  t.equals(stateTracker.state.timeSettings, null)
+
+  let timeSettings = {mainTime: 30, byoyomiTime: 10, byoyomiStones: 20}
+  await stateTracker.sync({timeSettings})
+
+  t.strictDeepEquals(stateTracker.state.timeSettings, timeSettings)
+
+  await stateTracker.controller.sendCommand({
+    name: 'time_settings',
+    args: ['15', '1', '10']
+  })
+
+  t.strictDeepEquals(stateTracker.state.timeSettings, {
+    mainTime: 15,
+    byoyomiTime: 1,
+    byoyomiStones: 10
+  })
 })
 
 t.test('sync history state', async t => {

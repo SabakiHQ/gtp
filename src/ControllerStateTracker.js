@@ -12,6 +12,7 @@ const commandEquals = (cmd1, cmd2) =>
 const getDefaultState = () => ({
   komi: null,
   boardsize: null,
+  timeSettings: null,
   history: []
 })
 
@@ -63,6 +64,15 @@ class ControllerStateTracker {
           this.state.history = []
         } else if (command.name === 'komi' && command.args.length >= 1) {
           this.state.komi = +command.args[0]
+        } else if (
+          command.name === 'time_settings' &&
+          command.args.length >= 3
+        ) {
+          this.state.timeSettings = {
+            mainTime: +command.args[0],
+            byoyomiTime: +command.args[1],
+            byoyomiStones: +command.args[2]
+          }
         } else if (
           ['fixed_handicap', 'place_free_handicap'].includes(command.name)
         ) {
@@ -206,6 +216,28 @@ class ControllerStateTracker {
 
       if (response.error)
         throw new Error('Board size is not supported by engine')
+    }
+
+    // Update timeSettings
+
+    if (
+      state.timeSettings != null &&
+      (this.state.timeSettings == null ||
+        state.timeSettings.mainTime !== this.state.timeSettings.mainTime ||
+        state.timeSettings.byoyomiTime !==
+          this.state.timeSettings.byoyomiTime ||
+        state.timeSettings.byoyomiStones !==
+          this.state.timeSettings.byoyomiStones)
+    ) {
+      let {error} = await controller.sendCommand({
+        name: 'time_settings',
+        args: [
+          `${state.timeSettings.mainTime}`,
+          `${state.timeSettings.byoyomiTime}`,
+          `${state.timeSettings.byoyomiStones}`
+        ]
+      })
+      if (error) throw new Error('Time settings are not supported by engine')
     }
 
     // Update history

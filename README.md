@@ -287,9 +287,14 @@ The state of an engine is represented by an object of the following structure:
 
 ```js
 {
-  komi: <number | null>,
-  boardsize: <[number, number] | null>,
-  history: <Command[] | null>
+  komi: <number>,
+  boardsize: <[number, number]>,
+  timeSettings: {
+    mainTime: <number>,
+    byoyomiTime: <number>,
+    byoyomiStones: <number>
+  },
+  history: <Command[]>
 }
 ```
 

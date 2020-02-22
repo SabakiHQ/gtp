@@ -21,6 +21,7 @@ for (let commandName of [
   'boardsize',
   'rectangular_boardsize',
   'komi',
+  'time_settings',
   'set_free_handicap',
   'loadsgf'
 ]) {
