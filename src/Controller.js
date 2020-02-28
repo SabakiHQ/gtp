@@ -61,24 +61,30 @@ class Controller extends EventEmitter {
   async stop(timeout = 3000) {
     if (this.process == null) return
 
-    let timeoutId = setTimeout(() => this.kill(), timeout)
+    return await new Promise(async resolve => {
+      this.once('stopped', resolve)
 
-    try {
-      let response = await this.sendCommand({name: 'quit'})
-      if (response.error) throw new Error(response.content)
-    } catch (err) {
-      this.kill()
-    }
+      let timeoutId = setTimeout(() => this.kill(), timeout)
 
-    clearTimeout(timeoutId)
-    await new Promise(resolve => this.once('stopped', resolve))
+      try {
+        let response = await this.sendCommand({name: 'quit'})
+        if (response.error) throw new Error(response.content)
+      } catch (err) {
+        this.kill()
+      }
+
+      clearTimeout(timeoutId)
+    })
   }
 
   async kill() {
     if (this.process == null) return
 
-    this.process.kill()
-    await new Promise(resolve => this.once('stopped', resolve))
+    return await new Promise(resolve => {
+      this.once('stopped', resolve)
+
+      this.process.kill()
+    })
   }
 
   async sendCommand(command, subscriber = () => {}) {
