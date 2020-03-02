@@ -10,7 +10,8 @@ module.exports = class Engine extends EventEmitter {
       protocol_version: '2',
       name: name,
       version: version,
-      known_command: ({args}, out) => out.send(`${args[0] in this.handlers}`),
+      known_command: ({args}, out) =>
+        out.send(`${this.handlers[args[0]] != null}`),
       list_commands: (_, out) =>
         out.send(Object.keys(this.handlers).join('\n')),
       quit: (_, out) => {
@@ -21,6 +22,7 @@ module.exports = class Engine extends EventEmitter {
 
     this.commands = []
     this.busy = false
+    this.handleAbort = null
   }
 
   command(name, handler) {
@@ -30,12 +32,15 @@ module.exports = class Engine extends EventEmitter {
   async _processCommands({output}) {
     if (this.commands.length === 0 || this.busy) return
 
+    let aborted = false
     let command = this.commands.shift()
+
     this.busy = true
+    this.handleAbort = () => (aborted = true)
 
     this.emit('command-processing', {command})
 
-    if (!(command.name in this.handlers)) {
+    if (this.handlers[command.name] != null) {
       output.write(
         Response.toString({
           id: command.id,
@@ -73,6 +78,9 @@ module.exports = class Engine extends EventEmitter {
       }
 
       let result = handler(command, {
+        get aborted() {
+          return aborted
+        },
         write(content) {
           if (ended) return
           if (!written) {
@@ -134,7 +142,9 @@ module.exports = class Engine extends EventEmitter {
     this.emit('command-processed', {command, response})
 
     this.busy = false
-    await this._processCommands({output})
+    this.handleAbort = null
+
+    return this._processCommands({output})
   }
 
   start({input = process.stdin, output = process.stdout} = {}) {
@@ -146,7 +156,11 @@ module.exports = class Engine extends EventEmitter {
     this._lineReader.on('line', line => {
       line = line.replace(/#.*?$/, '').trim()
 
-      if (line.trim() === '') return
+      if (line.trim() === '') {
+        this.emit('abort-received')
+        this.handleAbort()
+        return
+      }
 
       let command = Command.fromString(line)
       this.commands.push(command)

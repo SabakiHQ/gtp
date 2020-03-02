@@ -138,6 +138,10 @@ This event is emitted when a command is sent to the engine. Using the
 new line, see
 [streamController.sendCommand()](#async-streamcontrollersendcommandcommand-subscriber).
 
+#### Event: `abort-sent`
+
+This event is emitted when an abort signal, an empty line, is sent the engine.
+
 #### Event: `response-received`
 
 - `evt` `<Object>`
@@ -182,6 +186,11 @@ properties:
 - `response` [`<Response>`](#response) - The partial response until now,
   including the incoming line with all the previous lines.
 
+#### `streamController.sendAbort()`
+
+Sends an abort signal, an empty line, to the engine which tries to abort the
+command that's currently being processed.
+
 #### `streamController.close()`
 
 Cleans up listeners.
@@ -222,6 +231,10 @@ stderr.
 #### Event: `command-sent`
 
 See [corresponding event in `StreamController`](#event-command-sent).
+
+#### Event: `abort-sent`
+
+See [corresponding event in `StreamController`](#event-abort-sent).
 
 #### Event: `response-received`
 
@@ -273,6 +286,10 @@ Kills the engine process.
 
 See
 [corresponding function in `StreamController`](#async-streamcontrollersendcommandcommand-subscriber).
+
+#### `controller.sendAbort()`
+
+See [corresponding function in `StreamController`](#streamcontrollersendabort).
 
 ---
 
@@ -378,6 +395,11 @@ This event is emitted when the engine has started.
 #### Event: `stopped`
 
 This event is emitted when the engine has stopped.
+
+#### Event: `abort-received`
+
+This event is emitted when an empty line is received, signalling to abort the
+command that's currently being processed.
 
 #### Event: `command-received`
 

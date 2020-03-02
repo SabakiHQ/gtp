@@ -92,6 +92,12 @@ class Controller extends EventEmitter {
 
     return await this._streamController.sendCommand(command, subscriber)
   }
+
+  sendAbort() {
+    if (this.process == null) return
+
+    return this._streamController.sendAbort()
+  }
 }
 
 module.exports = Controller

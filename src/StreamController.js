@@ -95,7 +95,7 @@ class StreamController extends EventEmitter {
         this.input.write(commandString + '\n')
       } catch (err) {
         cleanUp()
-        reject(new Error('GTP engine connection error'))
+        reject(err)
       }
     })
 
@@ -109,6 +109,12 @@ class StreamController extends EventEmitter {
     })
 
     return promise
+  }
+
+  sendAbort() {
+    this.input.write('\n')
+
+    this.emit('abort-sent')
   }
 
   close() {
