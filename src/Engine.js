@@ -40,7 +40,7 @@ module.exports = class Engine extends EventEmitter {
 
     this.emit('command-processing', {command})
 
-    if (this.handlers[command.name] != null) {
+    if (this.handlers[command.name] == null) {
       output.write(
         Response.toString({
           id: command.id,

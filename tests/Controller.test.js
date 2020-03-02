@@ -200,3 +200,16 @@ t.test('sendCommand', async t => {
     })
   })
 })
+
+t.test('abortCommand', async t => {
+  let {controller} = t.context
+  let ended = false
+
+  controller.sendCommand({name: 'infinite'}).then(() => (ended = true))
+
+  await new Promise(r => setTimeout(r, 2000))
+  controller.sendAbort()
+  await new Promise(r => setTimeout(r, 1000))
+
+  t.assert(ended)
+})

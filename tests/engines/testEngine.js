@@ -102,4 +102,15 @@ testEngine.command('invalid', (command, out) => {
   if (command.args[0] === 'after') process.stdout.write('invalid line\n')
 })
 
+testEngine.command('infinite', async (command, out) => {
+  let i = 0
+
+  while (!out.aborted) {
+    out.write(`step ${i++}\n`)
+    await new Promise(r => setTimeout(r, 500))
+  }
+
+  out.end()
+})
+
 module.exports = testEngine
