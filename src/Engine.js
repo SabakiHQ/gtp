@@ -22,7 +22,7 @@ module.exports = class Engine extends EventEmitter {
 
     this.commands = []
     this.busy = false
-    this.handleAbort = null
+    this.handleAbort = () => {}
   }
 
   command(name, handler) {
@@ -142,7 +142,7 @@ module.exports = class Engine extends EventEmitter {
     this.emit('command-processed', {command, response})
 
     this.busy = false
-    this.handleAbort = null
+    this.handleAbort = () => {}
 
     return this._processCommands({output})
   }
