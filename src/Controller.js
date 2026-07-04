@@ -2,6 +2,7 @@ const EventEmitter = require('events')
 const {spawn, exec} = require('./ponyfills/child_process')
 const {StreamController} = require('./main')
 const {lineSubscribe} = require('./helper')
+const {prepareSpawn} = require('./spawn')
 
 class Controller extends EventEmitter {
   constructor(path, args = [], spawnOptions = {}) {
@@ -26,7 +27,12 @@ class Controller extends EventEmitter {
   start() {
     if (this.process != null) return
 
-    this.process = spawn(this.path, this.args, this.spawnOptions)
+    let {command, args, options} = prepareSpawn(
+      this.path,
+      this.args,
+      this.spawnOptions
+    )
+    this.process = spawn(command, args, options)
 
     this._unsubscribeStderr = lineSubscribe(this.process.stderr, line => {
       this.emit('stderr', {content: line})
