@@ -1,0 +1,50 @@
+name: Publish
+
+# Release flow: `npm version <patch|minor|major>` then `git push --follow-tags`.
+# Pushing the resulting `vX.Y.Z` tag triggers this workflow, which publishes that
+# version to npm using the NPM_TOKEN secret (a granular access token scoped to the
+# @sabaki packages with read-write + bypass-2FA).
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Check tag matches package.json version
+        run: |
+          pkg="v$(node -p "require('./package.json').version")"
+          if [ "$pkg" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match package.json ($pkg)"
+            exit 1
+          fi
+
+      - run: npm ci
+
+      # tap's CLI is broken on modern Node, so run each suite directly. Run from
+      # tests/ so the tap-snapshot paths resolve.
+      - name: Test
+        working-directory: tests
+        run: |
+          for f in *.test.js; do
+            echo "== $f =="
+            node "$f"
+          done
+
+      - name: Publish to npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
