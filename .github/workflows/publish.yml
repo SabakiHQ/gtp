@@ -3,7 +3,10 @@ name: Publish
 # Release flow: `npm version <patch|minor|major>` then `git push --follow-tags`.
 # Pushing the resulting `vX.Y.Z` tag triggers this workflow, which publishes that
 # version to npm using the NPM_TOKEN secret (a granular access token scoped to the
-# @sabaki packages with read-write + bypass-2FA).
+# @sabaki packages with read-write + bypass-2fa).
+#
+# A prerelease tag (e.g. v3.1.1-rc.0) publishes under the `next` dist-tag instead
+# of `latest`, so it doesn't affect consumers on the stable range.
 
 on:
   push:
@@ -45,6 +48,10 @@ jobs:
           done
 
       - name: Publish to npm
-        run: npm publish
+        run: |
+          case "$GITHUB_REF_NAME" in
+            *-*) npm publish --tag next ;;   # prerelease -> next
+            *)   npm publish ;;              # stable -> latest
+          esac
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
