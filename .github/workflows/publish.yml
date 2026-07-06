@@ -60,7 +60,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Match the repo's release-title convention: "<package name> vX.Y.Z".
+          title="$(node -p "require('./package.json').name") $GITHUB_REF_NAME"
           case "$GITHUB_REF_NAME" in
-            *-*) gh release create "$GITHUB_REF_NAME" --generate-notes --prerelease ;;
-            *)   gh release create "$GITHUB_REF_NAME" --generate-notes ;;
+            *-*) gh release create "$GITHUB_REF_NAME" --title "$title" --generate-notes --prerelease ;;
+            *)   gh release create "$GITHUB_REF_NAME" --title "$title" --generate-notes ;;
           esac
