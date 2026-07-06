@@ -1,4 +1,4 @@
-# @sabaki/gtp [![CI](https://github.com/SabakiHQ/gtp/workflows/CI/badge.svg?branch=master&event=push)](https://github.com/SabakiHQ/gtp/actions)
+# @sabaki/gtp [![CI](https://github.com/SabakiHQ/gtp/actions/workflows/ci.yml/badge.svg)](https://github.com/SabakiHQ/gtp/actions/workflows/ci.yml)
 
 A Node.js module for handling GTP engines.
 
