@@ -5,9 +5,7 @@
  * Make sure to inspect the output below.  Do not ignore changes!
  */
 'use strict'
-exports[
-  `ControllerStateTracker.test.js TAP queueCommand will send command after syncs are done > must match snapshot 1`
-] = `
+exports[`tests/ControllerStateTracker.test.js > TAP > queueCommand will send command after syncs are done > must match snapshot 1`] = `
 Array [
   Object {
     "args": Array [],

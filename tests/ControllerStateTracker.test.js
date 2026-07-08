@@ -3,7 +3,7 @@ const {PassThrough} = require('stream')
 const testEngine = require('./engines/testEngine')
 const {ControllerStateTracker} = require('..')
 
-t.beforeEach(async (_, t) => {
+t.beforeEach(async t => {
   let input = new PassThrough().on('data', chunk => (t.context.input += chunk))
   let output = new PassThrough().on(
     'data',
@@ -19,16 +19,16 @@ t.beforeEach(async (_, t) => {
   )
 })
 
-t.afterEach(async (_, t) => {
+t.afterEach(async t => {
   t.context.stateTracker.controller.close()
 })
 
 t.test('knowsCommand', async t => {
   let {stateTracker} = t.context
 
-  t.equals(await stateTracker.knowsCommand('sdlfkj'), false)
-  t.equals(await stateTracker.knowsCommand('list_commands'), true)
-  t.equals(await stateTracker.knowsCommand('version'), true)
+  t.equal(await stateTracker.knowsCommand('sdlfkj'), false)
+  t.equal(await stateTracker.knowsCommand('list_commands'), true)
+  t.equal(await stateTracker.knowsCommand('version'), true)
 })
 
 t.test('handle parallel syncing sequentially', async t => {
@@ -39,7 +39,7 @@ t.test('handle parallel syncing sequentially', async t => {
     stateTracker.sync({boardsize: [18, 18], history: []})
   ])
 
-  t.strictDeepEquals(stateTracker.state, {
+  t.strictSame(stateTracker.state, {
     komi: 8,
     boardsize: [18, 18],
     timeSettings: null,
@@ -60,13 +60,13 @@ t.test('failing sync', async t => {
 
 t.test('sync komi state', async t => {
   let {stateTracker} = t.context
-  t.equals(stateTracker.state.komi, null)
+  t.equal(stateTracker.state.komi, null)
 
   await stateTracker.sync({komi: 8})
-  t.equals(stateTracker.state.komi, 8)
+  t.equal(stateTracker.state.komi, 8)
 
   await stateTracker.controller.sendCommand({name: 'komi', args: ['8.5']})
-  t.equals(stateTracker.state.komi, 8.5)
+  t.equal(stateTracker.state.komi, 8.5)
 })
 
 t.test('sync boardsize state', async t => {
@@ -74,18 +74,18 @@ t.test('sync boardsize state', async t => {
 
   await stateTracker.controller.sendCommand({name: 'play', args: ['B', 'D4']})
 
-  t.equals(stateTracker.state.boardsize, null)
-  t.notEquals(stateTracker.state.history, null)
+  t.equal(stateTracker.state.boardsize, null)
+  t.not(stateTracker.state.history, null)
 
   await stateTracker.sync({boardsize: [13, 13]})
 
-  t.strictDeepEquals(stateTracker.state.boardsize, [13, 13])
-  t.equals(stateTracker.state.history, null)
+  t.strictSame(stateTracker.state.boardsize, [13, 13])
+  t.equal(stateTracker.state.history, null)
 
   await stateTracker.controller.sendCommand({name: 'boardsize', args: ['21']})
 
-  t.strictDeepEquals(stateTracker.state.boardsize, [21, 21])
-  t.equals(stateTracker.state.history, null)
+  t.strictSame(stateTracker.state.boardsize, [21, 21])
+  t.equal(stateTracker.state.history, null)
 })
 
 t.test('sync rectangular boardsize state', async t => {
@@ -93,39 +93,39 @@ t.test('sync rectangular boardsize state', async t => {
 
   await stateTracker.controller.sendCommand({name: 'play', args: ['B', 'D4']})
 
-  t.equals(stateTracker.state.boardsize, null)
-  t.notEquals(stateTracker.state.history, null)
+  t.equal(stateTracker.state.boardsize, null)
+  t.not(stateTracker.state.history, null)
 
   await stateTracker.sync({boardsize: [13, 15]})
 
-  t.strictDeepEquals(stateTracker.state.boardsize, [13, 15])
-  t.equals(stateTracker.state.history, null)
+  t.strictSame(stateTracker.state.boardsize, [13, 15])
+  t.equal(stateTracker.state.history, null)
 
   await stateTracker.controller.sendCommand({
     name: 'rectangular_boardsize',
     args: ['21', '10']
   })
 
-  t.strictDeepEquals(stateTracker.state.boardsize, [21, 10])
-  t.equals(stateTracker.state.history, null)
+  t.strictSame(stateTracker.state.boardsize, [21, 10])
+  t.equal(stateTracker.state.history, null)
 })
 
 t.test('sync time settings', async t => {
   let {stateTracker} = t.context
 
-  t.equals(stateTracker.state.timeSettings, null)
+  t.equal(stateTracker.state.timeSettings, null)
 
   let timeSettings = {mainTime: 30, byoyomiTime: 10, byoyomiStones: 20}
   await stateTracker.sync({timeSettings})
 
-  t.strictDeepEquals(stateTracker.state.timeSettings, timeSettings)
+  t.strictSame(stateTracker.state.timeSettings, timeSettings)
 
   await stateTracker.controller.sendCommand({
     name: 'time_settings',
     args: ['15', '1', '10']
   })
 
-  t.strictDeepEquals(stateTracker.state.timeSettings, {
+  t.strictSame(stateTracker.state.timeSettings, {
     mainTime: 15,
     byoyomiTime: 1,
     byoyomiStones: 10
@@ -144,13 +144,13 @@ t.test('sync history state', async t => {
     await Promise.all(
       commands.map(command => stateTracker.controller.sendCommand(command))
     )
-    t.strictDeepEquals(stateTracker.state.history, commands)
+    t.strictSame(stateTracker.state.history, commands)
 
     await stateTracker.controller.sendCommand({name: 'clear_board'})
-    t.strictDeepEquals(stateTracker.state.history, [])
+    t.strictSame(stateTracker.state.history, [])
 
     await stateTracker.sync({history: commands})
-    t.strictDeepEquals(stateTracker.state.history, commands)
+    t.strictSame(stateTracker.state.history, commands)
   })
 
   t.test('sync genmove commands', async t => {
@@ -190,7 +190,7 @@ t.test('sync history state', async t => {
       ]
     })
 
-    t.strictDeepEquals(stateTracker.state.history, history)
+    t.strictSame(stateTracker.state.history, history)
   })
 
   t.test('push history', async t => {
@@ -202,7 +202,7 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: commands})
-    t.strictDeepEquals(stateTracker.state.history, commands)
+    t.strictSame(stateTracker.state.history, commands)
 
     let newCommands = [
       ...commands,
@@ -211,7 +211,7 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: newCommands})
-    t.strictDeepEquals(stateTracker.state.history, newCommands)
+    t.strictSame(stateTracker.state.history, newCommands)
   })
 
   t.test('history changing sync without undo', async t => {
@@ -223,7 +223,7 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: commands})
-    t.strictDeepEquals(stateTracker.state.history, commands)
+    t.strictSame(stateTracker.state.history, commands)
 
     let newCommands = [
       ...commands.slice(0, -1),
@@ -232,7 +232,7 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: newCommands})
-    t.strictDeepEquals(stateTracker.state.history, newCommands)
+    t.strictSame(stateTracker.state.history, newCommands)
   })
 
   t.test('history changing sync with failing undo', async t => {
@@ -249,7 +249,7 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: commands})
-    t.strictDeepEquals(stateTracker.state.history, commands)
+    t.strictSame(stateTracker.state.history, commands)
 
     let newCommands = [
       ...commands.slice(0, -1),
@@ -258,7 +258,7 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: newCommands})
-    t.strictDeepEquals(stateTracker.state.history, newCommands)
+    t.strictSame(stateTracker.state.history, newCommands)
   })
 
   t.test('history changing sync with undo', async t => {
@@ -272,7 +272,7 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: commands})
-    t.strictDeepEquals(stateTracker.state.history, commands)
+    t.strictSame(stateTracker.state.history, commands)
 
     let newCommands = [
       ...commands.slice(0, -1),
@@ -281,8 +281,8 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: newCommands})
-    t.strictDeepEquals(stateTracker.state.history, newCommands)
-    t.assert(t.context.input.includes('undo\n'))
+    t.strictSame(stateTracker.state.history, newCommands)
+    t.ok(t.context.input.includes('undo\n'))
   })
 
   t.test('history sync after unknown history state', async t => {
@@ -294,13 +294,13 @@ t.test('sync history state', async t => {
     ]
 
     await stateTracker.sync({history: commands})
-    t.strictDeepEquals(stateTracker.state.history, commands)
+    t.strictSame(stateTracker.state.history, commands)
 
     await stateTracker.controller.sendCommand({name: 'loadsgf'})
-    t.equals(stateTracker.state.history, null)
+    t.equal(stateTracker.state.history, null)
 
     await stateTracker.sync({history: commands})
-    t.strictDeepEquals(stateTracker.state.history, commands)
+    t.strictSame(stateTracker.state.history, commands)
   })
 })
 
@@ -324,6 +324,6 @@ t.test('queueCommand will send command after syncs are done', async t => {
     stateTracker.sync({history: commands})
   ])
 
-  t.assert(responses[1] != null)
+  t.ok(responses[1] != null)
   t.matchSnapshot(sentCommands)
 })

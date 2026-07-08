@@ -4,14 +4,14 @@ const {Controller} = require('..')
 
 t.setTimeout(60000)
 
-t.beforeEach(async (_, t) => {
+t.beforeEach(async t => {
   t.context.controller = new Controller('node', [
     join(__dirname, 'engines', 'testEngine.cli.js')
   ])
   t.context.controller.start()
 })
 
-t.afterEach(async (_, t) => {
+t.afterEach(async t => {
   await t.context.controller.stop()
 })
 
@@ -19,7 +19,7 @@ t.test('sendCommand', async t => {
   t.test('should be able to send a simple command', async t => {
     let response = await t.context.controller.sendCommand({id: 5, name: 'name'})
 
-    t.deepEquals(response, {
+    t.same(response, {
       id: 5,
       content: 'Test Engine',
       error: false
@@ -29,7 +29,7 @@ t.test('sendCommand', async t => {
   t.test('should be able to handle empty commands gracefully', async t => {
     let response = await t.context.controller.sendCommand({name: '   \t'})
 
-    t.deepEquals(response, {
+    t.same(response, {
       id: null,
       content: '',
       error: false
@@ -39,7 +39,7 @@ t.test('sendCommand', async t => {
   t.test('should be able to handle error responses', async t => {
     let response = await t.context.controller.sendCommand({name: 'erring'})
 
-    t.deepEquals(response, {
+    t.same(response, {
       id: null,
       content: 'error!',
       error: true
@@ -49,7 +49,7 @@ t.test('sendCommand', async t => {
   t.test('should be able to handle unexpected error responses', async t => {
     let response = await t.context.controller.sendCommand({name: 'throw'})
 
-    t.deepEquals(response, {
+    t.same(response, {
       id: null,
       content: 'internal error',
       error: true
@@ -90,7 +90,7 @@ t.test('sendCommand', async t => {
     ]
 
     await t.context.controller.sendCommand({name: 'async'}, evt => {
-      t.deepEquals(evt, expectedEvents[counter])
+      t.same(evt, expectedEvents[counter])
       counter++
     })
   })
@@ -102,7 +102,7 @@ t.test('sendCommand', async t => {
       t.context.controller.sendCommand({name: 'version'})
     ])
 
-    t.deepEquals(responses, [
+    t.same(responses, [
       {
         id: null,
         content: 'ok',
@@ -126,16 +126,16 @@ t.test('sendCommand', async t => {
 
     t.context.controller.once('command-sent', async evt => {
       evt.subscribe(evt => counter++)
-      t.deepEquals(evt.command, {name: 'async', args: []})
+      t.same(evt.command, {name: 'async', args: []})
 
       let response = await evt.getResponse()
-      t.deepEquals(response, {
+      t.same(response, {
         id: null,
         content: 'look at me!\nasync and no end',
         error: false
       })
 
-      t.equals(counter, 6)
+      t.equal(counter, 6)
       t.end()
     })
 
@@ -144,7 +144,7 @@ t.test('sendCommand', async t => {
 
   t.test('should emit response-receive event', t => {
     t.context.controller.once('response-received', evt => {
-      t.deepEquals(evt, {
+      t.same(evt, {
         command: {name: 'async', args: []},
         response: {
           id: null,
@@ -160,10 +160,10 @@ t.test('sendCommand', async t => {
 
   t.test('should kill engine when it is not responding on stop', async t => {
     t.rejects(t.context.controller.sendCommand({name: 'delay'}))
-    t.assert(t.context.controller.busy)
+    t.ok(t.context.controller.busy)
 
     await t.context.controller.kill()
-    t.equals(t.context.controller.process, null)
+    t.equal(t.context.controller.process, null)
   })
 
   t.test('should ignore engine output lines outside responses', async t => {
@@ -171,19 +171,19 @@ t.test('sendCommand', async t => {
       name: 'invalid',
       args: ['before']
     })
-    t.equals(response1.content, 'ok')
+    t.equal(response1.content, 'ok')
 
     let response2 = await t.context.controller.sendCommand({
       name: 'invalid',
       args: ['after']
     })
-    t.equals(response2.content, 'ok')
+    t.equal(response2.content, 'ok')
   })
 
   t.test('should be able to send command after being stopped', async t => {
     let response = await t.context.controller.sendCommand({name: 'name'})
 
-    t.deepEquals(response, {
+    t.same(response, {
       id: null,
       content: 'Test Engine',
       error: false
@@ -193,7 +193,7 @@ t.test('sendCommand', async t => {
 
     response = await t.context.controller.sendCommand({name: 'name'})
 
-    t.deepEquals(response, {
+    t.same(response, {
       id: null,
       content: 'Test Engine',
       error: false

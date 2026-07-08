@@ -37,15 +37,7 @@ jobs:
 
       - run: npm ci
 
-      # tap's CLI is broken on modern Node, so run each suite directly. Run from
-      # tests/ so the tap-snapshot paths resolve.
-      - name: Test
-        working-directory: tests
-        run: |
-          for f in *.test.js; do
-            echo "== $f =="
-            node "$f"
-          done
+      - run: npm test
 
       - name: Publish to npm
         run: |

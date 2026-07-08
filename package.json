@@ -4,7 +4,7 @@
   "description": "A Node.js module for handling GTP engines.",
   "main": "./src/main.js",
   "scripts": {
-    "test": "cd tests && tap *.test.js",
+    "test": "tap --allow-incomplete-coverage tests/*.test.js",
     "format": "prettier **/*.{js,md} --write",
     "format-watch": "onchange \"**/*.{js,md}\" -- prettier --write {{changed}}"
   },
@@ -36,6 +36,6 @@
   "devDependencies": {
     "onchange": "^7.1.0",
     "prettier": "^3.9.4",
-    "tap": "^14.10.6"
+    "tap": "^21.7.4"
   }
 }
