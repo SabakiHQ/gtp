@@ -2,7 +2,7 @@ const t = require('tap')
 const {Command} = require('..')
 
 t.test('should parse a simple command', t => {
-  t.deepEqual(Command.fromString('quit'), {
+  t.same(Command.fromString('quit'), {
     id: null,
     name: 'quit',
     args: []
@@ -12,7 +12,7 @@ t.test('should parse a simple command', t => {
 })
 
 t.test('should parse a command with an id', t => {
-  t.deepEqual(Command.fromString('43 list_commands'), {
+  t.same(Command.fromString('43 list_commands'), {
     id: 43,
     name: 'list_commands',
     args: []
@@ -22,7 +22,7 @@ t.test('should parse a command with an id', t => {
 })
 
 t.test('should not parse float as id', t => {
-  t.deepEqual(Command.fromString('43.3 list_commands'), {
+  t.same(Command.fromString('43.3 list_commands'), {
     id: null,
     name: '43.3',
     args: ['list_commands']
@@ -32,7 +32,7 @@ t.test('should not parse float as id', t => {
 })
 
 t.test('should parse a command with some arguments', t => {
-  t.deepEqual(Command.fromString('play B    d4 "a comment"'), {
+  t.same(Command.fromString('play B    d4 "a comment"'), {
     id: null,
     name: 'play',
     args: ['B', 'd4', '"a', 'comment"']
