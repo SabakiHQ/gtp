@@ -32,28 +32,38 @@ class Controller extends EventEmitter {
       this.args,
       this.spawnOptions
     )
-    this.process = spawn(command, args, options)
+    let child = spawn(command, args, options)
 
-    this._unsubscribeStderr = lineSubscribe(this.process.stderr, line => {
+    this.process = child
+
+    this._unsubscribeStderr = lineSubscribe(child.stderr, line => {
       this.emit('stderr', {content: line})
     })
 
-    this.process.once('exit', signal => {
+    let stopped = ({code = null, signal = null, error = null}) => {
+      if (this.process !== child) return
+
       this._unsubscribeStderr()
-      this._streamController.close()
-      this.process.stdin.destroy()
-      this.process.stdout.destroy()
+      if (this._streamController != null) this._streamController.close()
+      child.stdin.destroy()
+      child.stdout.destroy()
 
       this._streamController = null
       this.process = null
 
-      this.emit('stopped', {signal})
+      this.emit('stopped', {code, signal, error})
+    }
+
+    // A failed spawn emits 'error' and 'close' but never 'exit', so this is the
+    // only chance to release the process and report why it never came up.
+    child.once('error', error => {
+      if (this.listenerCount('error') > 0) this.emit('error', error)
+      stopped({error})
     })
 
-    this._streamController = new StreamController(
-      this.process.stdin,
-      this.process.stdout
-    )
+    child.once('exit', (code, signal) => stopped({code, signal}))
+
+    this._streamController = new StreamController(child.stdin, child.stdout)
     this._streamController.on('command-sent', evt =>
       this.emit('command-sent', evt)
     )
@@ -61,7 +71,7 @@ class Controller extends EventEmitter {
       this.emit('response-received', evt)
     )
 
-    this.emit('started')
+    child.once('spawn', () => this.emit('started'))
   }
 
   async stop(timeout = 3000) {
