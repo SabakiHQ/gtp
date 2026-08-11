@@ -202,14 +202,33 @@ Use this class to spawn GTP engine processes and control them over `stdin` and
 
 #### Event: `started`
 
-This event is emitted when the engine process starts.
+This event is emitted once the engine process has successfully spawned. If the
+process cannot be spawned at all, this event is never emitted and `stopped` is
+emitted with an `error` instead.
 
 #### Event: `stopped`
 
 - `evt` `<Object>`
-  - `signal` `<String>` - The signal by which the engine process was terminated.
+  - `code` `<Number>` - The exit code, or `null` if the process was terminated
+    by a signal or never spawned.
+  - `signal` `<String>` - The signal by which the engine process was terminated,
+    or `null`.
+  - `error` `<Error>` - The reason the process could not be spawned (e.g.
+    `ENOENT` for a path that does not exist, `EACCES` for a file that is not
+    executable), or `null` if the process ran.
 
-This event is emitted after the engine process ends.
+This event is emitted after the engine process ends, and also when spawning it
+failed outright, so it is always safe to use as the signal that the controller
+is idle again.
+
+#### Event: `error`
+
+- `error` `<Error>`
+
+This event is emitted when the engine process could not be spawned. Following
+Node.js convention, an unhandled `error` event throws, so it is only emitted if
+at least one listener is attached; the same error is always reported on
+`stopped` regardless.
 
 #### Event: `stderr`
 
